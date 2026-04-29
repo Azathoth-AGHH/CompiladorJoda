@@ -9,184 +9,164 @@ import logica.sintactico.AnalizadorSintactico;
 
 import java.util.List;
 
-/**
- * Responsable de imprimir en la terminal todos los resultados
- * producidos por el compilador JODA.
- *
- * Esta clase sera reemplazada en el futuro por una vista JavaFX.
- * Solo este paquete usa System.out.println.
- */
 public class ImpresorResultados {
 
-    // Ancho de columnas para la tabla del documentador
-    private static final int COL_LINEA     =  6;
-    private static final int COL_LEXEMA    = 28;
-    private static final int COL_CATEGORIA = 26;
-    private static final int COL_DETALLE   = 45;
-
-    // ------------------------------------------------------------------ //
-    //  Impresion del resultado completo                                    //
-    // ------------------------------------------------------------------ //
+    private static final String OK = "[OK]";
+    private static final String ERROR = "[ERROR]";
+    private static final String INFO = "[INFO]";
 
     public void imprimir(CompiladorJoda.ResultadoCompilacion resultado) {
-        imprimirEncabezado();
-        imprimirSeparador('=', 80);
 
+        encabezado();
+
+        bloque("ANALISIS LEXICO");
         imprimirErroresLexicos(resultado.getTokens());
+
+        bloque("ANALISIS SINTACTICO");
         imprimirErroresSintacticos(resultado.getErroresSintacticos());
+
+        bloque("ANALISIS SEMANTICO");
         imprimirErroresSemanticos(resultado.getResultadoSemantico());
 
-        imprimirSeparador('=', 80);
+        bloque("TABLA DE TOKENS");
         imprimirTablaDocumentador(resultado.getTablaDoc());
 
-        imprimirSeparador('=', 80);
-        imprimirTablaSimbolos(resultado.getResultadoSemantico()
-                .getTablaSimbolos());
+        bloque("TABLA DE SIMBOLOS");
+        imprimirTablaSimbolos(
+                resultado.getResultadoSemantico().getTablaSimbolos()
+        );
 
-        imprimirSeparador('=', 80);
+        bloque("RESULTADO FINAL");
+
         if (resultado.isExitoso()) {
+            System.out.println("  " + OK + " COMPILACION EXITOSA");
             imprimirSalidaEjecucion(resultado.getSalidaEjecucion());
         } else {
-            System.out.println("  [COMPILADOR] Compilacion fallida. Corrija los errores antes de ejecutar.");
+            System.out.println("  " + ERROR + " COMPILACION FALLIDA");
+            System.out.println("  Corrija los errores detectados.");
         }
-        imprimirSeparador('=', 80);
+
+        linea();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Secciones individuales                                              //
-    // ------------------------------------------------------------------ //
+    private void encabezado() {
+        linea();
+        System.out.println("         COMPILADOR JODA");
+        System.out.println("   Joint Object-Deployment Assembly");
+        System.out.println("         Version 1.0");
+        linea();
+    }
 
-    private void imprimirEncabezado() {
+    private void bloque(String titulo) {
         System.out.println();
-        imprimirSeparador('*', 80);
-        System.out.println("  COMPILADOR JODA  -  Joint Object-Deployment Assembly");
-        System.out.println("  Version: 1.0  |  Plataforma: JVM-J");
-        imprimirSeparador('*', 80);
-        System.out.println();
+        System.out.println("┌──────────────────────────────────────────────┐");
+        System.out.printf ("│ %-44s │%n", titulo);
+        System.out.println("└──────────────────────────────────────────────┘");
+    }
+
+    private void linea() {
+        System.out.println("════════════════════════════════════════════════════════════════════");
     }
 
     private void imprimirErroresLexicos(List<Token> tokens) {
-        boolean hayErrores = false;
+
+        boolean hay = false;
+
         for (Token t : tokens) {
             if (t.getTipo() == Token.Tipo.ERROR) {
-                if (!hayErrores) {
-                    System.out.println("  --- ERRORES LEXICOS ---");
-                    hayErrores = true;
-                }
-                System.out.printf("  [Linea %3d] Error lexico: caracter no reconocido '%s'%n",
-                        t.getLinea(), limpiar(t.getLexema()));
+                hay = true;
+                System.out.printf("  %s Linea %d -> Caracter invalido: %s%n",
+                        ERROR, t.getLinea(), t.getLexema());
             }
         }
-        if (!hayErrores) {
-            System.out.println("  [LEXICO] Analisis lexico completado sin errores.");
-        }
-        System.out.println();
+
+        if (!hay)
+            System.out.println("  " + OK + " Sin errores lexicos.");
     }
 
     private void imprimirErroresSintacticos(
             List<AnalizadorSintactico.ErrorSintactico> errores) {
+
         if (errores.isEmpty()) {
-            System.out.println("  [SINTACTICO] Analisis sintactico completado sin errores.");
-        } else {
-            System.out.println("  --- ERRORES SINTACTICOS ---");
-            for (AnalizadorSintactico.ErrorSintactico e : errores) {
-                System.out.printf("  [Linea %3d] %s%n", e.getLinea(),
-                        limpiar(e.getDescripcion()));
-            }
+            System.out.println("  " + OK + " Sintaxis correcta.");
+            return;
         }
-        System.out.println();
+
+        for (var e : errores) {
+            System.out.printf("  %s Linea %d -> %s%n",
+                    ERROR, e.getLinea(), e.getDescripcion());
+        }
     }
 
     private void imprimirErroresSemanticos(
-            AnalizadorSemantico.ResultadoSemantico resultado) {
-        if (!resultado.tieneErrores()) {
-            System.out.println("  [SEMANTICO] Analisis semantico completado sin errores.");
-        } else {
-            System.out.println("  --- ERRORES SEMANTICOS ---");
-            for (AnalizadorSemantico.ErrorSemantico e : resultado.getErrores()) {
-                System.out.printf("  [Linea %3d] %s%n", e.getLinea(),
-                        limpiar(e.getDescripcion()));
-            }
+            AnalizadorSemantico.ResultadoSemantico r) {
+
+        if (!r.tieneErrores()) {
+            System.out.println("  " + OK + " Semantica valida.");
+            return;
         }
-        System.out.println();
+
+        for (var e : r.getErrores()) {
+            System.out.printf("  %s Linea %d -> %s%n",
+                    ERROR, e.getLinea(), e.getDescripcion());
+        }
     }
 
     private void imprimirTablaDocumentador(List<Documentador.FilaDoc> tabla) {
-        System.out.println("  TABLA DE TOKENS (DOCUMENTADOR)");
-        imprimirSeparador('-', 80);
 
-        // Encabezado
-        System.out.printf("  %-" + COL_LINEA     + "s"
-                        + "%-" + COL_LEXEMA    + "s"
-                        + "%-" + COL_CATEGORIA + "s"
-                        + "%-" + COL_DETALLE   + "s%n",
+        System.out.printf("%-6s %-20s %-20s %-30s%n",
                 "Linea", "Lexema", "Categoria", "Descripcion");
-        imprimirSeparador('-', 80);
 
-        // Filas
-        for (Documentador.FilaDoc fila : tabla) {
-            System.out.printf("  %-" + COL_LINEA     + "d"
-                            + "%-" + COL_LEXEMA    + "s"
-                            + "%-" + COL_CATEGORIA + "s"
-                            + "%-" + COL_DETALLE   + "s%n",
-                    fila.getLinea(),
-                    truncar(limpiar(fila.getLexema()),    COL_LEXEMA    - 2),
-                    truncar(limpiar(fila.getCategoria()), COL_CATEGORIA - 2),
-                    truncar(limpiar(fila.getDetalle()),   COL_DETALLE   - 2));
+        linea();
+
+        for (var f : tabla) {
+            System.out.printf("%-6d %-20s %-20s %-30s%n",
+                    f.getLinea(),
+                    truncar(f.getLexema(),20),
+                    truncar(f.getCategoria(),20),
+                    truncar(f.getDetalle(),30));
         }
-        imprimirSeparador('-', 80);
-        System.out.printf("  Total de tokens: %d%n%n", tabla.size());
+
+        System.out.println("\nTotal Tokens: " + tabla.size());
     }
 
     private void imprimirTablaSimbolos(List<EntradaTablaSimbolos> tabla) {
-        System.out.println("  TABLA DE SIMBOLOS (SEMANTICO)");
-        imprimirSeparador('-', 80);
-        System.out.printf("  %-20s %-10s %-15s %-12s %-6s%n",
-                "Nombre", "Tipo", "Ambito", "Categoria", "Linea");
-        imprimirSeparador('-', 80);
-        for (EntradaTablaSimbolos e : tabla) {
-            System.out.printf("  %-20s %-10s %-15s %-12s %-6d%n",
-                    limpiar(e.getNombre()),
-                    limpiar(e.getTipo()),
-                    limpiar(e.getAmbito()),
-                    e.getCategoria().name(),
+
+        System.out.printf("%-18s %-10s %-10s %-12s%n",
+                "Nombre","Tipo","Ambito","Linea");
+
+        linea();
+
+        for (var e : tabla) {
+            System.out.printf("%-18s %-10s %-10s %-12d%n",
+                    e.getNombre(),
+                    e.getTipo(),
+                    e.getAmbito(),
                     e.getLineaDecl());
         }
-        imprimirSeparador('-', 80);
-        System.out.printf("  Total de simbolos: %d%n%n", tabla.size());
+
+        System.out.println("\nTotal Simbolos: " + tabla.size());
     }
 
-    private void imprimirSalidaEjecucion(List<String> lineas) {
-        System.out.println("  SALIDA DE EJECUCION (JVM-J)");
-        imprimirSeparador('-', 80);
-        if (lineas.isEmpty()) {
-            System.out.println("  (sin salida)");
-        } else {
-            for (String linea : lineas) {
-                System.out.println("  " + limpiar(linea));
-            }
+    private void imprimirSalidaEjecucion(List<String> salida) {
+
+        if (salida.isEmpty()) {
+            System.out.println("  " + INFO + " Sin salida.");
+            return;
         }
-        System.out.println();
+
+        System.out.println("\nSALIDA:");
+
+        for (String s : salida)
+            System.out.println("  > " + s);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Utilidades de formato                                               //
-    // ------------------------------------------------------------------ //
-
-    private void imprimirSeparador(char caracter, int largo) {
-        StringBuilder sb = new StringBuilder("  ");
-        for (int i = 0; i < largo - 2; i++) sb.append(caracter);
-        System.out.println(sb.toString());
+    private String truncar(String t, int n) {
+        if (t == null) return "";
+        return t.length() > n ? t.substring(0,n-3)+"..." : t;
     }
 
-    private String truncar(String texto, int maxLen) {
-        if (texto == null) return "";
-        return texto.length() > maxLen ? texto.substring(0, maxLen - 3) + "..." : texto;
-    }
-
-    /** Elimina caracteres especiales no ASCII para evitar simbolos ? en consola. */
     public static String limpiar(String texto) {
-        if (texto == null) return "";
-        return texto.replaceAll("[^\\x20-\\x7E]", "?");
+        return texto == null ? "" : texto;
     }
 }
