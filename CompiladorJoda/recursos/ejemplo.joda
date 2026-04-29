@@ -1,0 +1,19 @@
+entry {
+
+define int ciclosRealizados = 85;
+define dec factorEficiencia = 0.95;
+define string mensajeFinal = "Rendimiento optimizado";
+
+define dec resultadoFinal = 80.75;
+
+out("Analizando procesos...");
+out("El resultado del rendimiento es: " + resultadoFinal);
+out(mensajeFinal);
+
+if (resultadoFinal > 80) {
+    out("Rendimiento dentro del rango.");
+} else {
+    out("Rendimiento fuera de rango.");
+}
+
+}
