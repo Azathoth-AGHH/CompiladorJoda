@@ -4,21 +4,17 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Fachada del analizador lexico.
- * Usa el lexer generado por JFlex (LexerJoda) para tokenizar
- * el codigo fuente y retorna la lista de tokens.
- */
+/*
+Usa el lexer generado por JFlex (LexerJoda) para tokenizar
+el codigo fuente y retorna la lista de tokens.
+*/
 public class AnalizadorLexico {
 
-    /**
-     * Analiza el codigo fuente y retorna todos los tokens encontrados.
-     * Los tokens de tipo COMENTARIO se incluyen en la lista (el documentador
-     * puede filtrarlos si es necesario).
-     *
-     * @param codigoFuente texto completo del programa .joda
-     * @return lista de tokens (incluyendo ERROR y EOF)
-     */
+    /*
+    Analiza el codigo fuente y retorna todos los tokens encontrados.
+    Los tokens de tipo COMENTARIO se incluyen en la lista (el documentador
+    puede filtrarlos si es necesario).
+    */
     public List<Token> analizar(String codigoFuente) {
         List<Token> tokens = new ArrayList<>();
         try {
@@ -30,7 +26,6 @@ public class AnalizadorLexico {
                     break;
                 }
             }
-            // Aseguramos un EOF al final si el lexer no lo genero
             if (tokens.isEmpty() || tokens.get(tokens.size() - 1).getTipo() != Token.Tipo.EOF) {
                 tokens.add(new Token(Token.Tipo.EOF, "", 0));
             }
@@ -41,7 +36,6 @@ public class AnalizadorLexico {
         return tokens;
     }
 
-    /** Elimina caracteres especiales no ASCII para evitar simbolos ? en consola. */
     private String limpiar(String texto) {
         if (texto == null) return "";
         return texto.replaceAll("[^\\x20-\\x7E]", "?");

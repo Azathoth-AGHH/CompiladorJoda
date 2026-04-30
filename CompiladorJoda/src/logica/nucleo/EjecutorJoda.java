@@ -3,29 +3,23 @@ package logica.nucleo;
 import logica.lexico.Token;
 import java.util.*;
 
-/**
- * Ejecutor/Interprete simplificado para el lenguaje JODA.
- *
- * Recorre el bloque 'entry' y procesa las siguientes instrucciones:
- *   - out( expr )  -> genera una linea de salida
- *   - define tipo id = valor  -> almacena variable en memoria
- *   - id = expr  -> reasignacion de variable
- *   - if / loop -> flujo de control basico
- *
- * Este modulo simula la "JVM-J" descrita en el documento de JODA.
- */
+/*
+Ejecutor/Interprete simplificado para el lenguaje JODA.
+Recorre el bloque 'entry' y procesa las siguientes instrucciones:
+- out( expr )  -> genera una linea de salida
+- define tipo id = valor  -> almacena variable en memoria
+- id = expr  -> reasignacion de variable
+- if / loop -> flujo de control basico
+*/
 public class EjecutorJoda {
 
     // Memoria de variables: nombre -> valor (como String para simplicidad)
     private final Map<String, String> memoria = new LinkedHashMap<>();
-    private final List<String>        salida  = new ArrayList<>();
+    private final List<String> salida  = new ArrayList<>();
 
-    /**
-     * Ejecuta el bloque 'entry' encontrado en la lista de tokens.
-     *
-     * @param tokens lista completa de tokens del programa
-     * @return lista de lineas generadas por instrucciones 'out'
-     */
+    /*
+    Ejecuta el bloque 'entry' encontrado en la lista de tokens.
+    */
     public List<String> ejecutar(List<Token> tokens) {
         memoria.clear();
         salida.clear();
@@ -40,10 +34,7 @@ public class EjecutorJoda {
         return salida;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Busqueda del bloque entry                                           //
-    // ------------------------------------------------------------------ //
-
+    //  Busqueda del bloque entry
     private int buscarEntry(List<Token> tokens) {
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i).getTipo() == Token.Tipo.PR_ENTRY) {
@@ -58,11 +49,7 @@ public class EjecutorJoda {
         return -1;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Ejecucion de bloque                                                 //
-    // ------------------------------------------------------------------ //
-
-    /** Ejecuta sentencias hasta encontrar '}' o EOF. Retorna el indice post-bloque. */
+    //Ejecuta sentencias hasta encontrar '}' o EOF. Retorna el indice post-bloque.
     private int ejecutarBloque(List<Token> tokens, int pos) {
         while (pos < tokens.size()) {
             Token t = tokens.get(pos);
@@ -104,11 +91,9 @@ public class EjecutorJoda {
         return pos;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Instrucciones                                                        //
-    // ------------------------------------------------------------------ //
+    //  Instrucciones soportadas: define, out, if, loop, asignacion
 
-    /** define tipo id = valor ; */
+    // define tipo id = valor ;
     private int ejecutarDefine(List<Token> tokens, int pos) {
         pos++; // consume 'define'
         if (pos >= tokens.size()) return pos;
@@ -141,7 +126,7 @@ public class EjecutorJoda {
         return avanzarHastaPuntoComa(tokens, pos);
     }
 
-    /** out( expr ) ; */
+    //out( expr ) ;
     private int ejecutarOut(List<Token> tokens, int pos) {
         pos++; // consume 'out'
         pos++; // consume '('
@@ -160,7 +145,7 @@ public class EjecutorJoda {
         return avanzarHastaPuntoComa(tokens, pos);
     }
 
-    /** if ( cond ) { bloque } [else { bloque }] */
+    // if ( cond ) { bloque } [else { bloque }]
     private int ejecutarIf(List<Token> tokens, int pos) {
         pos++; // consume 'if'
         pos++; // consume '('
@@ -201,7 +186,7 @@ public class EjecutorJoda {
         return pos;
     }
 
-    /** loop ( cond ) { bloque } */
+    // loop ( cond ) { bloque }
     private int ejecutarLoop(List<Token> tokens, int pos) {
         pos++; // consume 'loop'
         pos++; // consume '('
@@ -255,7 +240,7 @@ public class EjecutorJoda {
         return saltarBloque(tokens, pos);
     }
 
-    /** id = expr ; */
+    // id = expr ;
     private int ejecutarAsignacion(List<Token> tokens, int pos) {
         String nombre = tokens.get(pos).getLexema();
         pos++;
@@ -285,15 +270,10 @@ public class EjecutorJoda {
         return avanzarHastaPuntoComa(tokens, pos);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Evaluacion de expresiones                                           //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Evalua una expresion a partir de 'pos'.
-     * Retorna un arreglo de dos elementos: [valor, nuevaPosicion].
-     * Simplificacion: soporta operaciones binarias izquierda a derecha.
-     */
+    /*Evaluacion de expresiones
+    Evalua una expresion a partir de 'pos'.
+    Retorna un arreglo de dos elementos: [valor, nuevaPosicion].
+    */
     private String[] evaluarExpresion(List<Token> tokens, int pos) {
         if (pos >= tokens.size()) return new String[]{"", String.valueOf(pos)};
 
@@ -309,7 +289,6 @@ public class EjecutorJoda {
             pos = Integer.parseInt(termDer[1]);
             valIzq = aplicarOperador(valIzq, op.getTipo(), valDer);
         }
-
         return new String[]{valIzq, String.valueOf(pos)};
     }
 
@@ -340,7 +319,7 @@ public class EjecutorJoda {
                 if (pos < tokens.size()
                         && tokens.get(pos).getTipo() == Token.Tipo.DEL_PUNTO) {
                     pos++;
-                    if (pos < tokens.size()) pos++; // nombre metodo
+                    if (pos < tokens.size()) pos++;
                     if (pos < tokens.size()
                             && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_A) {
                         pos++;
@@ -434,11 +413,9 @@ public class EjecutorJoda {
         return argumento;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Utilidades                                                          //
-    // ------------------------------------------------------------------ //
-
-    /** Salta un bloque completo { ... } respetando bloques anidados. */
+    /*  Utilidades
+    Salta un bloque completo { ... } respetando bloques anidados.
+    */
     private int saltarBloque(List<Token> tokens, int pos) {
         int nivel = 1;
         while (pos < tokens.size() && nivel > 0) {

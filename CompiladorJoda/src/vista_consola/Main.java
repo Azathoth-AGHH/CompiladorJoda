@@ -8,14 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Punto de entrada del Compilador JODA (Modo Consola)
- *
- * Uso:
- * java -cp out vista_consola.Main archivo.joda
- *
- * Si no se envia archivo, usa recursos/ejemplo.joda
- */
 public class Main {
 
     private static final String ARCHIVO_EJEMPLO = "recursos/ejemplo.joda";
@@ -35,29 +27,21 @@ public class Main {
         ejecutarCompilacion(codigoFuente);
     }
 
-    // ------------------------------------------------------------
     // CONFIGURACION INICIAL
-    // ------------------------------------------------------------
-
     private static void configurarConsola() {
         try {
             System.setProperty("file.encoding", "UTF-8");
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 
     private static void mostrarBienvenida() {
         System.out.println("══════════════════════════════════════════════════════");
         System.out.println("              COMPILADOR JODA v1.0");
-        System.out.println("     Joint Object-Deployment Assembly");
         System.out.println("══════════════════════════════════════════════════════");
         System.out.println();
     }
 
-    // ------------------------------------------------------------
     // ARCHIVO
-    // ------------------------------------------------------------
-
     private static String obtenerRutaArchivo(String[] args) {
 
         if (args.length > 0) {
@@ -66,7 +50,6 @@ public class Main {
 
         System.out.println("[INFO] No se especifico archivo.");
         System.out.println("[INFO] Se utilizara archivo de ejemplo.\n");
-
         return ARCHIVO_EJEMPLO;
     }
 
@@ -94,10 +77,7 @@ public class Main {
         }
     }
 
-    // ------------------------------------------------------------
     // COMPILACION
-    // ------------------------------------------------------------
-
     private static void ejecutarCompilacion(String codigoFuente) {
 
         try {

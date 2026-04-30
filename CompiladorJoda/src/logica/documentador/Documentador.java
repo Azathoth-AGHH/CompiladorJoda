@@ -4,13 +4,13 @@ import logica.lexico.Token;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Genera la tabla de documentacion de tokens.
- * Clasifica cada token en su categoria semantica para el reporte.
- */
+/*
+Genera la tabla de documentacion de tokens.
+Clasifica cada token en su categoria semantica para el reporte.
+*/
 public class Documentador {
 
-    /** Fila de la tabla de documentacion. */
+    /*Fila de la tabla de documentacion. */
     public static class FilaDoc {
         private final int    linea;
         private final String lexema;
@@ -30,10 +30,10 @@ public class Documentador {
         public String getDetalle()   { return detalle;   }
     }
 
-    /**
-     * Procesa la lista de tokens y retorna las filas de documentacion.
-     * Omite comentarios, espacios y EOF.
-     */
+    /*
+    Procesa la lista de tokens y retorna las filas de documentacion.
+    Omite comentarios, espacios y EOF.
+    */
     public List<FilaDoc> documentar(List<Token> tokens) {
         List<FilaDoc> tabla = new ArrayList<>();
         for (Token t : tokens) {
@@ -51,10 +51,7 @@ public class Documentador {
         return tabla;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Metodos privados de clasificacion                                  //
-    // ------------------------------------------------------------------ //
-
+    //  Metodos privados de clasificacion
     private String resolverCategoria(Token.Tipo tipo) {
         switch (tipo) {
             case PR_ENTRY: case PR_OBJECT: case PR_METHOD:
@@ -173,7 +170,7 @@ public class Documentador {
         }
     }
 
-    /** Elimina caracteres especiales no ASCII. */
+    /* Elimina caracteres especiales no ASCII. */
     private String limpiar(String texto) {
         if (texto == null) return "";
         return texto.replaceAll("[^\\x20-\\x7E]", "?");

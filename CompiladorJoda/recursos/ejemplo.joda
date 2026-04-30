@@ -1,19 +1,10 @@
 entry {
 
-define int ciclosRealizados = 85;
-define dec factorEficiencia = 0.95;
-define string mensajeFinal = "Rendimiento optimizado";
-
-define dec resultadoFinal = 80.75;
-
-out("Analizando procesos...");
-out("El resultado del rendimiento es: " + resultadoFinal);
-out(mensajeFinal);
-
-if (resultadoFinal > 80) {
-    out("Rendimiento dentro del rango.");
+define int edad = 18;
+if (edad >= 18) {
+    out("Eres mayor de edad");
 } else {
-    out("Rendimiento fuera de rango.");
+    out("Eres menor de edad");
 }
 
 }

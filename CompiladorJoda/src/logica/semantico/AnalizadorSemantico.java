@@ -3,16 +3,16 @@ package logica.semantico;
 import logica.lexico.Token;
 import java.util.*;
 
-/**
- * Analizador semantico para el lenguaje JODA.
- *
- * Realiza las siguientes validaciones sobre la lista de tokens:
- *   1. Declaracion de variables con 'define' antes de uso.
- *   2. Variables declaradas pero no inicializadas al usarse.
- *   3. Compatibilidad de tipos en asignaciones simples.
- *   4. Registro de clases (object) y metodos (method) en tabla de simbolos.
- *   5. Identificadores que inicien con mayuscula (violacion de regla JODA).
- */
+/*
+Analizador semantico para el lenguaje JODA.
+
+Realiza las siguientes validaciones sobre la lista de tokens:
+1. Declaracion de variables con 'define' antes de uso.
+2. Variables declaradas pero no inicializadas al usarse.
+3. Compatibilidad de tipos en asignaciones simples.
+4. Registro de clases (object) y metodos (method) en tabla de simbolos.
+5. Identificadores que inicien con mayuscula (violacion de regla JODA).
+*/
 public class AnalizadorSemantico {
 
     /** Error semantico con descripcion y linea. */

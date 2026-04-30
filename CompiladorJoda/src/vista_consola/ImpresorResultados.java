@@ -32,8 +32,7 @@ public class ImpresorResultados {
         imprimirTablaDocumentador(resultado.getTablaDoc());
 
         bloque("TABLA DE SIMBOLOS");
-        imprimirTablaSimbolos(
-                resultado.getResultadoSemantico().getTablaSimbolos()
+        imprimirTablaSimbolos(resultado.getResultadoSemantico().getTablaSimbolos()
         );
 
         bloque("RESULTADO FINAL");
@@ -52,7 +51,6 @@ public class ImpresorResultados {
     private void encabezado() {
         linea();
         System.out.println("         COMPILADOR JODA");
-        System.out.println("   Joint Object-Deployment Assembly");
         System.out.println("         Version 1.0");
         linea();
     }
@@ -132,8 +130,7 @@ public class ImpresorResultados {
 
     private void imprimirTablaSimbolos(List<EntradaTablaSimbolos> tabla) {
 
-        System.out.printf("%-18s %-10s %-10s %-12s%n",
-                "Nombre","Tipo","Ambito","Linea");
+        System.out.printf("%-18s %-10s %-10s %-12s%n", "Nombre","Tipo","Ambito","Linea");
 
         linea();
 
@@ -156,9 +153,11 @@ public class ImpresorResultados {
         }
 
         System.out.println("\nSALIDA:");
-
-        for (String s : salida)
+        
+        for(String s: salida){
             System.out.println("  > " + s);
+        }
+
     }
 
     private String truncar(String t, int n) {

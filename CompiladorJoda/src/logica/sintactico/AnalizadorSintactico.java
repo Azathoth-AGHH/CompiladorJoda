@@ -4,76 +4,72 @@ import logica.lexico.Token;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Analizador sintactico descendente recursivo para JODA.
- *
- * Valida las siguientes construcciones:
- *   - Bloque entry { ... }
- *   - Declaraciones: define tipo id [= valor] ;
- *   - Salida: out( expr ) ;
- *   - Entrada: input( id ) ;
- *   - Condicional: if ( cond ) { } [else { }]
- *   - Ciclo: loop ( cond ) { }
- *   - Seleccion: select ( id ) { case val: sentencia; ... }
- *   - Definicion de objeto: object Nombre { ... }
- *   - Definicion de metodo: method [tipo] nombre ( params ) { ... }
- *   - Asignacion: id = expr ;
- *   - Incremento/Decremento: id++ ; / id-- ;
- */
+/*
+Analizador sintactico
+
+Valida las siguientes construcciones:
+ - Bloque entry { ... }
+ - Declaraciones: define tipo id [= valor] ;
+ - Salida: out( expr ) ;
+ - Entrada: input( id ) ;
+ - Condicional: if ( cond ) { } [else { }]
+ - Ciclo: loop ( cond ) { }
+ - Seleccion: select ( id ) { case val: sentencia; ... }
+ - Definicion de objeto: object Nombre { ... }
+ - Definicion de metodo: method [tipo] nombre ( params ) { ... }
+ - Asignacion: id = expr ;
+ - Incremento/Decremento: id++ ; / id-- ;
+*/
 public class AnalizadorSintactico {
 
-    /** Error sintactico con descripcion y linea. */
+    // Error sintactico con descripcion y linea.
     public static class ErrorSintactico {
         private final String descripcion;
-        private final int    linea;
+        private final int linea;
 
         public ErrorSintactico(String descripcion, int linea) {
             this.descripcion = descripcion;
-            this.linea       = linea;
+            this.linea = linea;
         }
 
-        public String getDescripcion() { return descripcion; }
-        public int    getLinea()       { return linea; }
+        public String getDescripcion(){
+            return descripcion;
+        }
+
+        public int getLinea(){
+            return linea;
+        }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Estado interno                                                      //
-    // ------------------------------------------------------------------ //
-
-    private List<Token>         tokens;
-    private int                 pos;
+    //  Estado interno
+    private List<Token> tokens;
+    private int pos;
     private List<ErrorSintactico> errores;
 
-    // ------------------------------------------------------------------ //
-    //  API publica                                                         //
-    // ------------------------------------------------------------------ //
-
     public List<ErrorSintactico> analizar(List<Token> tokens) {
-        this.tokens  = tokens;
-        this.pos     = 0;
+        this.tokens = tokens;
+        this.pos = 0;
         this.errores = new ArrayList<>();
 
         parsearPrograma();
         return errores;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Reglas gramaticales                                                 //
-    // ------------------------------------------------------------------ //
+    //  Reglas gramaticales
 
-    /** programa -> declaracionTop* EOF */
+    //programa -> declaracionTop* EOF
     private void parsearPrograma() {
         while (!esEOF()) {
             parsearDeclaracionTop();
         }
     }
 
-    /**
+    /*
      * declaracionTop -> definicionObjeto
      *                 | definicionMetodo
      *                 | bloqueEntry
      *                 | sentencia
-     */
+    */
     private void parsearDeclaracionTop() {
         Token t = verActual();
         switch (t.getTipo()) {
@@ -86,7 +82,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /** entry { bloque } */
+    // entry { bloque }
     private void parsearEntry() {
         consumir(Token.Tipo.PR_ENTRY, "'entry'");
         consumir(Token.Tipo.DEL_LLAVE_A, "'{'  despues de 'entry'");
@@ -94,7 +90,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_LLAVE_C, "'}'  para cerrar bloque 'entry'");
     }
 
-    /** object Nombre { miembroObjeto* } */
+    // object Nombre { miembroObjeto* }
     private void parsearObjeto() {
         consumir(Token.Tipo.PR_OBJECT, "'object'");
         consumirIdentificador("nombre de clase despues de 'object'");
@@ -118,7 +114,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_LLAVE_C, "'}'  para cerrar bloque 'object'");
     }
 
-    /** method [tipo] nombre ( params ) { bloque } */
+    // method [tipo] nombre ( params ) { bloque }
     private void parsearMetodo() {
         consumir(Token.Tipo.PR_METHOD, "'method'");
         // Tipo de retorno opcional
@@ -134,7 +130,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_LLAVE_C, "'}'  para cerrar metodo");
     }
 
-    /** parametros -> (tipo id (, tipo id)*)? */
+    // parametros -> (tipo id (, tipo id)*)?
     private void parsearParametros() {
         if (esTipoDato(verActual().getTipo())) {
             avanzar(); // tipo
@@ -153,7 +149,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /** bloque -> sentencia* */
+    // bloque -> sentencia*
     private void parsearBloque() {
         while (!esEOF()
                 && verActual().getTipo() != Token.Tipo.DEL_LLAVE_C) {
@@ -161,7 +157,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /**
+    /*
      * sentencia -> define
      *            | out
      *            | input
@@ -171,7 +167,7 @@ public class AnalizadorSintactico {
      *            | asignacion
      *            | incremento/decremento
      *            | return
-     */
+    */
     private void parsearSentencia() {
         Token t = verActual();
         switch (t.getTipo()) {
@@ -204,7 +200,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /** define tipo [[] ] id [= expr] ; */
+    // define tipo [[] ] id [= expr] ;
     private void parsearDefine() {
         consumir(Token.Tipo.PR_DEFINE, "'define'");
         if (!esTipoDato(verActual().getTipo())) {
@@ -228,7 +224,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_PUNTO_COMA, "';'  al final de la declaracion 'define'");
     }
 
-    /** out ( expr ) ; */
+    // out ( expr ) ;
     private void parsearOut() {
         consumir(Token.Tipo.PR_OUT, "'out'");
         consumir(Token.Tipo.DEL_PAREN_A, "'('  despues de 'out'");
@@ -237,7 +233,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_PUNTO_COMA, "';'  al final de 'out'");
     }
 
-    /** input ( id ) ; */
+    // input ( id ) ;
     private void parsearInput() {
         consumir(Token.Tipo.PR_INPUT, "'input'");
         consumir(Token.Tipo.DEL_PAREN_A, "'('  despues de 'input'");
@@ -246,7 +242,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_PUNTO_COMA, "';'  al final de 'input'");
     }
 
-    /** if ( cond ) { bloque } [else { bloque }] */
+    // if ( cond ) { bloque } [else { bloque }]
     private void parsearIf() {
         consumir(Token.Tipo.PR_IF, "'if'");
         consumir(Token.Tipo.DEL_PAREN_A, "'('  en condicion 'if'");
@@ -263,7 +259,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /** loop ( cond ) { bloque } */
+    // loop ( cond ) { bloque }
     private void parsearLoop() {
         consumir(Token.Tipo.PR_LOOP, "'loop'");
         consumir(Token.Tipo.DEL_PAREN_A, "'('  en condicion 'loop'");
@@ -274,7 +270,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_LLAVE_C, "'}'  para cerrar bloque 'loop'");
     }
 
-    /** select ( id ) { (case val : sentencia)+ } */
+    // select ( id ) { (case val : sentencia)+ }
     private void parsearSelect() {
         consumir(Token.Tipo.PR_SELECT, "'select'");
         consumir(Token.Tipo.DEL_PAREN_A, "'('  en 'select'");
@@ -293,17 +289,12 @@ public class AnalizadorSintactico {
                         "Se esperaba un valor despues de 'case'.",
                         verActual().getLinea()));
             }
-            // Se espera ':' – JODA usa ':' como separador de case
-            // En la especificacion se ve: case 1: out("Primera");
-            // Aqui usamos DEL_PUNTO_COMA como terminador, pero ':' no esta en
-            // la tabla de tokens. Lo tratamos como un identificador vacio.
-            // NOTA: si se desea agregar ':' como token, modificar Joda.flex
             parsearSentencia();
         }
         consumir(Token.Tipo.DEL_LLAVE_C, "'}'  para cerrar bloque 'select'");
     }
 
-    /** return [expr] ; */
+    // return [expr] ;
     private void parsearReturn() {
         consumir(Token.Tipo.PR_RETURN, "'return'");
         if (verActual().getTipo() != Token.Tipo.DEL_PUNTO_COMA) {
@@ -312,7 +303,7 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_PUNTO_COMA, "';'  al final de 'return'");
     }
 
-    /** id = expr ; | id++ ; | id-- ; | id.metodo(...) ; */
+    // id = expr ; | id++ ; | id-- ; | id.metodo(...) ;
     private void parsearAsignacionOIncremento() {
         Token id = verActual();
         avanzar(); // consume el identificador
@@ -353,7 +344,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /** argumentos -> (expr (, expr)*)? */
+    // argumentos -> (expr (, expr)*)?
     private void parsearArgumentos() {
         if (verActual().getTipo() != Token.Tipo.DEL_PAREN_C
                 && !esEOF()) {
@@ -365,10 +356,10 @@ public class AnalizadorSintactico {
         }
     }
 
-    /**
-     * expr -> termino ((+|-) termino)*
-     * Simplificacion: consume tokens hasta encontrar ')', ';', '{', '}' o EOF.
-     */
+    /*
+    expr -> termino ((+|-) termino)*
+    Simplificacion: consume tokens hasta encontrar ')', ';', '{', '}' o EOF.
+    */
     private void parsearExpresion() {
         parsearTermino();
         while (esOperadorBinario(verActual().getTipo())) {
@@ -377,7 +368,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /** termino -> literal | identificador | (expr) | !termino */
+    // termino -> literal | identificador | (expr) | !termino
     private void parsearTermino() {
         Token t = verActual();
         switch (t.getTipo()) {
@@ -431,15 +422,11 @@ public class AnalizadorSintactico {
                 break;
 
             default:
-                // No se reporta error aqui, la expresion puede ser vacia
                 break;
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Utilidades de consumo                                               //
-    // ------------------------------------------------------------------ //
-
+    //  Utilidades de consumo
     private Token verActual() {
         if (pos < tokens.size()) return tokens.get(pos);
         return new Token(Token.Tipo.EOF, "", -1);
@@ -471,7 +458,7 @@ public class AnalizadorSintactico {
         }
     }
 
-    /** Avanza hasta el siguiente ';' o '}' para recuperarse de un error. */
+    // Avanza hasta el siguiente ';' o '}' para recuperarse de un error.
     private void recuperar() {
         while (!esEOF()
                 && verActual().getTipo() != Token.Tipo.DEL_PUNTO_COMA
@@ -484,22 +471,15 @@ public class AnalizadorSintactico {
     }
 
     private boolean esEOF() {
-        return pos >= tokens.size()
-                || tokens.get(pos).getTipo() == Token.Tipo.EOF;
+        return pos >= tokens.size() || tokens.get(pos).getTipo() == Token.Tipo.EOF;
     }
 
     private boolean esTipoDato(Token.Tipo tipo) {
-        return tipo == Token.Tipo.PR_INT   || tipo == Token.Tipo.PR_DEC
-                || tipo == Token.Tipo.PR_STRING || tipo == Token.Tipo.PR_BOOL
-                || tipo == Token.Tipo.PR_VOID;
+        return tipo == Token.Tipo.PR_INT   || tipo == Token.Tipo.PR_DEC || tipo == Token.Tipo.PR_STRING || tipo == Token.Tipo.PR_BOOL || tipo == Token.Tipo.PR_VOID;
     }
 
     private boolean esLiteral(Token.Tipo tipo) {
-        return tipo == Token.Tipo.LIT_ENTERO
-                || tipo == Token.Tipo.LIT_DECIMAL
-                || tipo == Token.Tipo.LIT_CADENA
-                || tipo == Token.Tipo.PR_TRUE
-                || tipo == Token.Tipo.PR_FALSE;
+        return tipo == Token.Tipo.LIT_ENTERO || tipo == Token.Tipo.LIT_DECIMAL || tipo == Token.Tipo.LIT_CADENA || tipo == Token.Tipo.PR_TRUE || tipo == Token.Tipo.PR_FALSE;
     }
 
     private boolean esOperadorBinario(Token.Tipo tipo) {

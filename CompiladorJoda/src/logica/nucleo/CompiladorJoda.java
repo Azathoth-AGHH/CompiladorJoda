@@ -9,32 +9,27 @@ import logica.sintactico.AnalizadorSintactico;
 
 import java.util.List;
 
-/**
- * Orquestador principal del compilador JODA.
- *
- * Fase 1 - Analisis:
- *   a) Lexico    -> tokeniza el codigo fuente
- *   b) Sintactico -> valida la estructura gramatical
- *   c) Semantico  -> valida tipos, ambitos y redeclaraciones
- *
- * Fase 2 - Ejecucion (simulada):
- *   Si no hay errores, se ejecuta el bloque 'entry'.
- *
- * Este paquete NO imprime nada. Devuelve objetos de resultado.
- */
+/*
+CompiladorJoda es la clase central que coordina el proceso de compilacion y ejecucion
+del lenguaje JODA. Se divide en dos fases principales:
+
+Fase 1 - Analisis:
+  a) Lexico    -> tokeniza el codigo fuente
+  b) Sintactico -> valida la estructura gramatical
+  c) Semantico  -> valida tipos, ambitos y redeclaraciones
+
+Fase 2 - Ejecucion (simulada): Si no hay errores, se ejecuta el bloque 'entry'.
+*/
 public class CompiladorJoda {
 
-    // ------------------------------------------------------------------ //
-    //  Resultado global del compilador                                     //
-    // ------------------------------------------------------------------ //
-
+    //  Resultado global del compilador
     public static class ResultadoCompilacion {
-        private final List<Token>                     tokens;
+        private final List<Token> tokens;
         private final List<AnalizadorSintactico.ErrorSintactico> erroresSintacticos;
-        private final AnalizadorSemantico.ResultadoSemantico     resultadoSemantico;
-        private final List<Documentador.FilaDoc>      tablaDoc;
-        private final List<String>                    salidaEjecucion;
-        private final boolean                         exitoso;
+        private final AnalizadorSemantico.ResultadoSemantico resultadoSemantico;
+        private final List<Documentador.FilaDoc> tablaDoc;
+        private final List<String> salidaEjecucion;
+        private final boolean exitoso;
 
         public ResultadoCompilacion(
                 List<Token> tokens,
@@ -43,42 +38,47 @@ public class CompiladorJoda {
                 List<Documentador.FilaDoc> tablaDoc,
                 List<String> salidaEjecucion,
                 boolean exitoso) {
-            this.tokens              = tokens;
-            this.erroresSintacticos  = erroresSintacticos;
-            this.resultadoSemantico  = resultadoSemantico;
-            this.tablaDoc            = tablaDoc;
-            this.salidaEjecucion     = salidaEjecucion;
-            this.exitoso             = exitoso;
+                this.tokens = tokens;
+                this.erroresSintacticos = erroresSintacticos;
+                this.resultadoSemantico = resultadoSemantico;
+                this.tablaDoc = tablaDoc;
+                this.salidaEjecucion = salidaEjecucion;
+                this.exitoso = exitoso;
         }
 
-        public List<Token>                                    getTokens()             { return tokens;             }
-        public List<AnalizadorSintactico.ErrorSintactico>    getErroresSintacticos()  { return erroresSintacticos; }
-        public AnalizadorSemantico.ResultadoSemantico        getResultadoSemantico()  { return resultadoSemantico; }
-        public List<Documentador.FilaDoc>                    getTablaDoc()            { return tablaDoc;           }
-        public List<String>                                  getSalidaEjecucion()     { return salidaEjecucion;    }
-        public boolean                                       isExitoso()              { return exitoso;            }
+        public List<Token> getTokens(){
+                return tokens;
+        }
+
+        public List<AnalizadorSintactico.ErrorSintactico> getErroresSintacticos(){
+                return erroresSintacticos;
+        }
+
+        public AnalizadorSemantico.ResultadoSemantico getResultadoSemantico(){
+                return resultadoSemantico;
+        }
+
+        public List<Documentador.FilaDoc> getTablaDoc(){
+                return tablaDoc;
+        }
+
+        public List<String> getSalidaEjecucion(){
+                return salidaEjecucion;
+        }
+
+        public boolean isExitoso(){
+                return exitoso;
+        }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Componentes                                                         //
-    // ------------------------------------------------------------------ //
+    //  Componentes
+    private final AnalizadorLexico analizadorLexico = new AnalizadorLexico();
+    private final AnalizadorSintactico analizadorSintact = new AnalizadorSintactico();
+    private final AnalizadorSemantico analizadorSemant = new AnalizadorSemantico();
+    private final Documentador documentador = new Documentador();
+    private final EjecutorJoda ejecutor = new EjecutorJoda();
 
-    private final AnalizadorLexico      analizadorLexico    = new AnalizadorLexico();
-    private final AnalizadorSintactico  analizadorSintact   = new AnalizadorSintactico();
-    private final AnalizadorSemantico   analizadorSemant    = new AnalizadorSemantico();
-    private final Documentador          documentador        = new Documentador();
-    private final EjecutorJoda          ejecutor            = new EjecutorJoda();
 
-    // ------------------------------------------------------------------ //
-    //  API publica                                                         //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Compila y, si no hay errores, ejecuta el codigo fuente JODA.
-     *
-     * @param codigoFuente contenido del archivo .joda
-     * @return resultado completo con tokens, errores, tabla y salida
-     */
     public ResultadoCompilacion compilar(String codigoFuente) {
 
         // -- FASE 1a: Analisis Lexico --
@@ -106,7 +106,7 @@ public class CompiladorJoda {
         // -- FASE 2: Ejecucion (solo si no hay errores) --
         List<String> salidaEjecucion = new java.util.ArrayList<>();
         if (!hayErrores) {
-            salidaEjecucion = ejecutor.ejecutar(tokens);
+                salidaEjecucion = ejecutor.ejecutar(tokens);
         }
 
         return new ResultadoCompilacion(
@@ -119,8 +119,6 @@ public class CompiladorJoda {
         );
     }
 
-    // ------------------------------------------------------------------ //
-    //  Acceso directo al semantico (para compatibilidad)                  //
-    // ------------------------------------------------------------------ //
+    //  Acceso directo al semantico (para compatibilidad)
     private AnalizadorSemantico analizadorSemantico = new AnalizadorSemantico();
 }
