@@ -1,9 +1,3 @@
-/* ============================================================
-   Archivo de especificacion JFlex para el lenguaje JODA
-   Compatible con JFlex 1.9+
-   Compilar con: java -jar JFlex.jar src/logica/lexico/Joda.flex
-   ============================================================ */
-
 package logica.lexico;
 
 %%

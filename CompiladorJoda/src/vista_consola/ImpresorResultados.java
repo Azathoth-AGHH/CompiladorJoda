@@ -155,7 +155,7 @@ public class ImpresorResultados {
         System.out.println("\nSALIDA:");
         
         for(String s: salida){
-            System.out.println("  > " + s);
+            System.out.println(s);
         }
 
     }

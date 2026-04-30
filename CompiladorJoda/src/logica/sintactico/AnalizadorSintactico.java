@@ -32,34 +32,41 @@ public class AnalizadorSintactico {
             this.linea = linea;
         }
 
-        public String getDescripcion(){
+        public String getDescripcion() {
             return descripcion;
         }
 
-        public int getLinea(){
+        public int getLinea() {
             return linea;
         }
     }
 
-    //  Estado interno
+    // Estado interno
     private List<Token> tokens;
     private int pos;
     private List<ErrorSintactico> errores;
 
     public List<ErrorSintactico> analizar(List<Token> tokens) {
-        this.tokens = tokens;
-        this.pos = 0;
+        this.tokens  = tokens;
+        this.pos     = 0;
         this.errores = new ArrayList<>();
 
         parsearPrograma();
         return errores;
     }
 
-    //  Reglas gramaticales
+    // ------------------------------------------------------------------ //
+    // Reglas gramaticales
+    // ------------------------------------------------------------------ //
 
-    //programa -> declaracionTop* EOF
+    // programa -> declaracionTop* EOF
     private void parsearPrograma() {
         while (!esEOF()) {
+            // CORRECCIÓN 1: ignorar comentarios a nivel de programa
+            if (verActual().getTipo() == Token.Tipo.COMENTARIO) {
+                avanzar();
+                continue;
+            }
             parsearDeclaracionTop();
         }
     }
@@ -69,13 +76,13 @@ public class AnalizadorSintactico {
      *                 | definicionMetodo
      *                 | bloqueEntry
      *                 | sentencia
-    */
+     */
     private void parsearDeclaracionTop() {
         Token t = verActual();
         switch (t.getTipo()) {
-            case PR_OBJECT: parsearObjeto();  break;
-            case PR_METHOD: parsearMetodo();  break;
-            case PR_ENTRY:  parsearEntry();   break;
+            case PR_OBJECT: parsearObjeto(); break;
+            case PR_METHOD: parsearMetodo(); break;
+            case PR_ENTRY:  parsearEntry();  break;
             default:
                 parsearSentencia();
                 break;
@@ -97,13 +104,16 @@ public class AnalizadorSintactico {
         consumir(Token.Tipo.DEL_LLAVE_A, "'{'  despues del nombre de objeto");
         while (!esEOF()
                 && verActual().getTipo() != Token.Tipo.DEL_LLAVE_C) {
-            // Dentro de un objeto puede haber defines y methods
+            // CORRECCIÓN 2: ignorar comentarios dentro de object
+            if (verActual().getTipo() == Token.Tipo.COMENTARIO) {
+                avanzar();
+                continue;
+            }
             if (verActual().getTipo() == Token.Tipo.PR_DEFINE) {
                 parsearDefine();
             } else if (verActual().getTipo() == Token.Tipo.PR_METHOD) {
                 parsearMetodo();
             } else {
-                // Error de recuperacion: avanzar
                 errores.add(new ErrorSintactico(
                         "Construccion inesperada dentro de 'object': '"
                                 + limpiar(verActual().getLexema()) + "'.",
@@ -153,6 +163,11 @@ public class AnalizadorSintactico {
     private void parsearBloque() {
         while (!esEOF()
                 && verActual().getTipo() != Token.Tipo.DEL_LLAVE_C) {
+            // CORRECCIÓN 3: ignorar comentarios dentro de cualquier bloque
+            if (verActual().getTipo() == Token.Tipo.COMENTARIO) {
+                avanzar();
+                continue;
+            }
             parsearSentencia();
         }
     }
@@ -167,20 +182,25 @@ public class AnalizadorSintactico {
      *            | asignacion
      *            | incremento/decremento
      *            | return
-    */
+     */
     private void parsearSentencia() {
         Token t = verActual();
         switch (t.getTipo()) {
-            case PR_DEFINE: parsearDefine();   break;
-            case PR_OUT:    parsearOut();      break;
-            case PR_INPUT:  parsearInput();    break;
-            case PR_IF:     parsearIf();       break;
-            case PR_LOOP:   parsearLoop();     break;
-            case PR_SELECT: parsearSelect();   break;
-            case PR_RETURN: parsearReturn();   break;
+            // CORRECCIÓN 4: ignorar comentarios en parsearSentencia
+            // (defensa extra por si llega un comentario desde parsearDeclaracionTop)
+            case COMENTARIO:
+                avanzar();
+                break;
+
+            case PR_DEFINE: parsearDefine();              break;
+            case PR_OUT:    parsearOut();                 break;
+            case PR_INPUT:  parsearInput();               break;
+            case PR_IF:     parsearIf();                  break;
+            case PR_LOOP:   parsearLoop();                break;
+            case PR_SELECT: parsearSelect();              break;
+            case PR_RETURN: parsearReturn();              break;
 
             case IDENTIFICADOR:
-                // Puede ser asignacion o incremento/decremento
                 parsearAsignacionOIncremento();
                 break;
 
@@ -280,7 +300,6 @@ public class AnalizadorSintactico {
         while (!esEOF()
                 && verActual().getTipo() == Token.Tipo.PR_CASE) {
             avanzar(); // consume 'case'
-            // Valor del caso: entero, decimal, cadena, bool
             if (esLiteral(verActual().getTipo())
                     || verActual().getTipo() == Token.Tipo.IDENTIFICADOR) {
                 avanzar();
@@ -357,9 +376,8 @@ public class AnalizadorSintactico {
     }
 
     /*
-    expr -> termino ((+|-) termino)*
-    Simplificacion: consume tokens hasta encontrar ')', ';', '{', '}' o EOF.
-    */
+     * expr -> termino ((op) termino)*
+     */
     private void parsearExpresion() {
         parsearTermino();
         while (esOperadorBinario(verActual().getTipo())) {
@@ -382,7 +400,6 @@ public class AnalizadorSintactico {
 
             case IDENTIFICADOR:
                 avanzar();
-                // Acceso .metodo() o llamada a funcion
                 if (verActual().getTipo() == Token.Tipo.DEL_PUNTO) {
                     avanzar();
                     consumirIdentificador("metodo despues de '.'");
@@ -408,7 +425,7 @@ public class AnalizadorSintactico {
                 break;
 
             case OP_NOT:
-            case OP_RESTA: // negacion unaria
+            case OP_RESTA:
                 avanzar();
                 parsearTermino();
                 break;
@@ -426,7 +443,10 @@ public class AnalizadorSintactico {
         }
     }
 
-    //  Utilidades de consumo
+    // ------------------------------------------------------------------ //
+    // Utilidades de consumo
+    // ------------------------------------------------------------------ //
+
     private Token verActual() {
         if (pos < tokens.size()) return tokens.get(pos);
         return new Token(Token.Tipo.EOF, "", -1);
@@ -471,15 +491,24 @@ public class AnalizadorSintactico {
     }
 
     private boolean esEOF() {
-        return pos >= tokens.size() || tokens.get(pos).getTipo() == Token.Tipo.EOF;
+        return pos >= tokens.size()
+                || tokens.get(pos).getTipo() == Token.Tipo.EOF;
     }
 
     private boolean esTipoDato(Token.Tipo tipo) {
-        return tipo == Token.Tipo.PR_INT   || tipo == Token.Tipo.PR_DEC || tipo == Token.Tipo.PR_STRING || tipo == Token.Tipo.PR_BOOL || tipo == Token.Tipo.PR_VOID;
+        return tipo == Token.Tipo.PR_INT
+                || tipo == Token.Tipo.PR_DEC
+                || tipo == Token.Tipo.PR_STRING
+                || tipo == Token.Tipo.PR_BOOL
+                || tipo == Token.Tipo.PR_VOID;
     }
 
     private boolean esLiteral(Token.Tipo tipo) {
-        return tipo == Token.Tipo.LIT_ENTERO || tipo == Token.Tipo.LIT_DECIMAL || tipo == Token.Tipo.LIT_CADENA || tipo == Token.Tipo.PR_TRUE || tipo == Token.Tipo.PR_FALSE;
+        return tipo == Token.Tipo.LIT_ENTERO
+                || tipo == Token.Tipo.LIT_DECIMAL
+                || tipo == Token.Tipo.LIT_CADENA
+                || tipo == Token.Tipo.PR_TRUE
+                || tipo == Token.Tipo.PR_FALSE;
     }
 
     private boolean esOperadorBinario(Token.Tipo tipo) {

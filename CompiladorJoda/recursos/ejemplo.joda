@@ -7,4 +7,6 @@ if (edad >= 18) {
     out("Eres menor de edad");
 }
 
+//Bloque inicial
+out("Holaaaaaaaaaaaaaaaaaaaaaaaaa");
 }
