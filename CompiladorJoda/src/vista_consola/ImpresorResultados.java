@@ -32,13 +32,12 @@ public class ImpresorResultados {
         imprimirTablaSimbolos(resultado.getTablaSimbolos());
         imprimirEstadoCompilacion(resultado);
         imprimirSalidaEjecucion(resultado);
-        imprimirPiePagina();
     }
 
     // Secciones del reporte
     private void imprimirEncabezado() {
         linea('=', 70);
-        centrar("COMPILADOR JODA v1.0  -  Joint Object-Deployment Assembly", 70);
+        centrar("COMPILADOR JODA v2.0  -  Joint Object-Deployment Assembly", 70);
         centrar("JVM-J: JODA Virtual Machine  |  Arquitectura Hibrida ISW", 70);
         linea('=', 70);
         System.out.println();
@@ -118,7 +117,7 @@ public class ImpresorResultados {
         }
 
         System.out.println("  " + sep);
-        System.out.printf("  Total de tokens: %d%n", tokens.size() - 1); // sin EOF
+        System.out.printf("  Total de tokens: %d%n", tokens.size() - 1);
         System.out.println();
     }
 
@@ -238,13 +237,6 @@ public class ImpresorResultados {
             System.out.println("  [JVM-J] La ejecucion termino con errores en tiempo de ejecucion.");
         }
         System.out.println();
-    }
-
-    private void imprimirPiePagina() {
-        linea('=', 70);
-        centrar("JODA Compiler  -  ISW  -  CUUT  -  UAEMEX", 70);
-        centrar("Jose | Oscar | Daniela | Alexis", 70);
-        linea('=', 70);
     }
 
     // Utilidades de formato

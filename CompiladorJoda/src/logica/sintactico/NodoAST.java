@@ -165,10 +165,7 @@ public abstract class NodoAST {
         }
     }
 
-    // =========================================================================
     // NODOS DE LITERALES
-    // =========================================================================
-
     public static class NodoLiteralEntero extends NodoAST {
         public final int valor;
 
