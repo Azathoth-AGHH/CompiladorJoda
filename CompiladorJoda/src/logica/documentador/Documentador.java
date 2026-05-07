@@ -1,178 +1,189 @@
 package logica.documentador;
 
 import logica.lexico.Token;
-import java.util.ArrayList;
 import java.util.List;
 
-/*
-Genera la tabla de documentacion de tokens.
-Clasifica cada token en su categoria semantica para el reporte.
-*/
+/*Documentador del codigo de JODA
+Recorre la lista de tokens producida por el analizador lexico
+y a su vez genera una narrativa de cada elemento del codigo */
 public class Documentador {
+    /*Genera la narrativa a partir de los tokens */
+    public String documentar(List<Token> tokens, String codigoFuente) {
+        StringBuilder doc = new StringBuilder();
+        doc.append("=== DOCUMENTACION GENERADA POR EL COMPILADOR JODA ===\n");
+        doc.append("Narrativa descriptiva del flujo de tokens identificados:\n\n");
 
-    /*Fila de la tabla de documentacion. */
-    public static class FilaDoc {
-        private final int    linea;
-        private final String lexema;
-        private final String categoria;
-        private final String detalle;
+        int lineaAnterior = -1;
 
-        public FilaDoc(int linea, String lexema, String categoria, String detalle) {
-            this.linea     = linea;
-            this.lexema    = lexema;
-            this.categoria = categoria;
-            this.detalle   = detalle;
+        for (Token token : tokens) {
+            if (token.getTipo() == Token.Tipo.T_FIN_ARCHIVO) break;
+
+            if (token.getLinea() != lineaAnterior) {
+                doc.append("\n--- Linea ").append(token.getLinea()).append(" ---\n");
+                lineaAnterior = token.getLinea();
+            }
+
+            String descripcion = describirToken(token);
+            doc.append("  [").append(padRight(token.getTipo().name(), 28)).append("] ");
+            doc.append("Lexema: '").append(padRight(token.getLexema(), 20)).append("' -> ");
+            doc.append(descripcion).append("\n");
         }
 
-        public int    getLinea()     { return linea;     }
-        public String getLexema()    { return lexema;    }
-        public String getCategoria() { return categoria; }
-        public String getDetalle()   { return detalle;   }
+        doc.append("\n=== FIN DE DOCUMENTACION ===\n");
+        return doc.toString();
     }
 
     /*
-    Procesa la lista de tokens y retorna las filas de documentacion.
-    Omite comentarios, espacios y EOF.
-    */
-    public List<FilaDoc> documentar(List<Token> tokens) {
-        List<FilaDoc> tabla = new ArrayList<>();
-        for (Token t : tokens) {
-            if (t.getTipo() == Token.Tipo.COMENTARIO
-                    || t.getTipo() == Token.Tipo.EOF) {
-                continue;
-            }
-            tabla.add(new FilaDoc(
-                    t.getLinea(),
-                    limpiar(t.getLexema()),
-                    resolverCategoria(t.getTipo()),
-                    resolverDetalle(t.getTipo())
-            ));
-        }
-        return tabla;
-    }
+    Retorna una descripcion narrativa segun el tipo de token.
+    Se incluyen detalles sobre su funcion en el lenguaje JODA, su sintaxis y su semantica.
+     */
+    private String describirToken(Token token) {
+        switch (token.getTipo()) {
 
-    //  Metodos privados de clasificacion
-    private String resolverCategoria(Token.Tipo tipo) {
-        switch (tipo) {
-            case PR_ENTRY: case PR_OBJECT: case PR_METHOD:
-            case PR_DEFINE: case PR_INT:  case PR_DEC:
-            case PR_STRING: case PR_BOOL: case PR_VOID:
-            case PR_IF:    case PR_ELSE:  case PR_SELECT:
-            case PR_CASE:  case PR_LOOP:  case PR_OUT:
-            case PR_INPUT: case PR_TRUE:  case PR_FALSE:
-            case PR_NEW:   case PR_RETURN:
-                return "Palabra Reservada";
+            // Palabras reservadas de estructura
+            case T_ENTRY:
+                return "Se identifica la palabra reservada 'entry': marca el inicio del bloque principal de ejecucion del programa.";
+            case T_OBJECT:
+                return "Se identifica 'object': define una nueva clase o estructura para el paradigma orientado a objetos.";
+            case T_METHOD:
+                return "Se identifica 'method': declara una funcion o comportamiento dentro de un objeto o de forma global.";
 
-            case LIT_ENTERO:   return "Literal Entero";
-            case LIT_DECIMAL:  return "Literal Decimal";
-            case LIT_CADENA:   return "Literal Cadena";
+            // Palabras reservadas de definicion de variables
+            case T_DEFINE:
+                return "Se detecta la instruccion 'define': reserva un espacio en memoria para una nueva variable (tipado explicito obligatorio).";
+            case T_INT:
+                return "Se identifica el tipo de dato 'int': entero de 32 bits con signo (rango: -2,147,483,648 a 2,147,483,647).";
+            case T_DEC:
+                return "Se identifica el tipo de dato 'dec': decimal de alta fidelidad de 64 bits (doble precision IEEE 754).";
+            case T_STRING:
+                return "Se identifica el tipo de dato 'string': cadena de caracteres en formato UTF-8, delimitada por comillas dobles.";
+            case T_BOOL:
+                return "Se identifica el tipo de dato 'bool': valor logico binario, acepta unicamente 'true' o 'false'.";
+            case T_VOID:
+                return "Se identifica 'void': indica que un metodo no retorna ningun valor.";
 
-            case IDENTIFICADOR: return "Identificador";
+            // Control de flujo
+            case T_IF:
+                return "Se detecta la instruccion 'if': inicio de una estructura condicional para toma de decisiones.";
+            case T_ELSE:
+                return "Se detecta 'else': bloque alternativo que se ejecuta cuando la condicion del 'if' es falsa.";
+            case T_LOOP:
+                return "Se detecta 'loop': estructura de repeticion que itera mientras la condicion sea verdadera.";
+            case T_SELECT:
+                return "Se detecta 'select': estructura de seleccion multiple basada en casos (similar a switch).";
+            case T_CASE:
+                return "Se detecta 'case': define un caso especifico dentro de una estructura 'select'.";
 
-            case OP_SUMA: case OP_RESTA: case OP_MULTIPLICACION:
-            case OP_DIVISION: case OP_MODULO:
-                return "Operador Aritmetico";
+            // Entrada/salida
+            case T_OUT:
+                return "Se detecta 'out': comando de salida estandar para imprimir datos en la consola.";
+            case T_INPUT:
+                return "Se detecta 'input': captura informacion ingresada por el usuario desde el teclado.";
 
-            case OP_IGUAL: case OP_DIFERENTE: case OP_MAYOR:
-            case OP_MENOR: case OP_MAYOR_IGUAL: case OP_MENOR_IGUAL:
-                return "Operador Relacional";
+            // Literales
+            case T_LITERAL_ENTERO:
+                return "Se reconoce un literal entero de valor '" + token.getLexema() + "': constante numerica sin parte decimal.";
+            case T_LITERAL_DECIMAL:
+                return "Se reconoce un literal decimal de valor '" + token.getLexema() + "': constante numerica con punto decimal (alta fidelidad).";
+            case T_LITERAL_CADENA:
+                return "Se reconoce una cadena de texto: \"" + token.getLexema() + "\". Se almacena como secuencia de caracteres UTF-8.";
+            case T_LITERAL_BOOL:
+                return "Se reconoce el literal booleano '" + token.getLexema() + "': valor logico que representa verdadero o falso.";
+            case T_TRUE:
+                return "Literal booleano 'true': representa el estado verdadero (1) en una variable de tipo bool.";
+            case T_FALSE:
+                return "Literal booleano 'false': representa el estado falso (0) en una variable de tipo bool.";
 
-            case OP_AND: case OP_OR: case OP_NOT:
-                return "Operador Logico";
+            // Identificadores
+            case T_IDENTIFICADOR:
+                return "Se identifica el nombre de variable o identificador: '" + token.getLexema()
+                    + "'. Cumple la regla: inicia en minuscula, seguido de letras, digitos o '_'.";
 
-            case OP_ASIGNACION: case OP_INCREMENTO: case OP_DECREMENTO:
-                return "Operador de Asignacion";
+            // Operadores aritmeticos
+            case T_SUMA:
+                return "Se detecta el signo '+': operador de suma aritmetica o concatenacion de cadenas (Coercion Inteligente).";
+            case T_RESTA:
+                return "Se detecta el signo '-': operador de resta aritmetica entre valores numericos.";
+            case T_MULTIPLICACION:
+                return "Se detecta el signo '*': operador de multiplicacion aritmetica.";
+            case T_DIVISION:
+                return "Se detecta el signo '/': operador de division aritmetica. El resultado es de tipo 'dec'.";
+            case T_MODULO:
+                return "Se detecta el signo '%': operador modulo, retorna el residuo de una division entera.";
 
-            case DEL_PUNTO_COMA:
-                return "Delimitador";
-            case DEL_LLAVE_A: case DEL_LLAVE_C:
-                return "Bloque";
-            case DEL_PAREN_A: case DEL_PAREN_C:
-                return "Agrupador";
-            case DEL_CORCHETE_A: case DEL_CORCHETE_C:
-                return "Arreglo";
-            case DEL_COMA:
-                return "Separador";
-            case DEL_PUNTO:
-                return "Acceso";
+            // Operadores relacionales
+            case T_IGUAL_IGUAL:
+                return "Se detecta '==': operador relacional de igualdad. Compara si dos valores son identicos.";
+            case T_DIFERENTE:
+                return "Se detecta '!=': operador relacional de desigualdad. Retorna 'true' si los valores son distintos.";
+            case T_MAYOR:
+                return "Se detecta '>': operador relacional 'mayor que'. Retorna 'true' si el operando izquierdo es mayor.";
+            case T_MENOR:
+                return "Se detecta '<': operador relacional 'menor que'. Retorna 'true' si el operando izquierdo es menor.";
+            case T_MAYOR_IGUAL:
+                return "Se detecta '>=': operador relacional 'mayor o igual que'.";
+            case T_MENOR_IGUAL:
+                return "Se detecta '<=': operador relacional 'menor o igual que'.";
 
-            case ERROR:
-                return "ERROR LEXICO";
+            // Operadores logicos
+            case T_AND:
+                return "Se detecta '&&': operador logico AND (conjuncion). Verdadero solo si ambas condiciones son verdaderas.";
+            case T_OR:
+                return "Se detecta '||': operador logico OR (disyuncion). Verdadero si al menos una condicion es verdadera.";
+            case T_NOT:
+                return "Se detecta '!': operador logico NOT (negacion). Invierte el valor booleano del operando.";
+
+            // Operadores de asignacion
+            case T_ASIGNACION:
+                return "Se detecta el signo '=': operador de asignacion que almacena el valor de la expresion derecha en la variable izquierda.";
+            case T_INCREMENTO:
+                return "Se detecta '++': operador de incremento postfijo. Aumenta en 1 el valor de la variable numerica.";
+            case T_DECREMENTO:
+                return "Se detecta '--': operador de decremento postfijo. Reduce en 1 el valor de la variable numerica.";
+
+            // Delimitadores
+            case T_PUNTO_Y_COMA:
+                return "Se detecta ';': delimitador obligatorio de fin de sentencia (Sintaxis de Precision de JODA).";
+            case T_LLAVE_ABRE:
+                return "Se detecta '{': apertura de un bloque de codigo. Define un nuevo ambito de memoria en la JVM-J.";
+            case T_LLAVE_CIERRA:
+                return "Se detecta '}': cierre del bloque de codigo. El ambito de memoria definido por '{' queda liberado.";
+            case T_PARENTESIS_ABRE:
+                return "Se detecta '(': apertura de agrupacion de expresion o lista de parametros.";
+            case T_PARENTESIS_CIERRA:
+                return "Se detecta ')': cierre de la agrupacion de expresion o lista de parametros.";
+            case T_CORCHETE_ABRE:
+                return "Se detecta '[': inicio de definicion o acceso a un arreglo (array) indexado.";
+            case T_CORCHETE_CIERRA:
+                return "Se detecta ']': fin de la definicion o acceso al arreglo.";
+            case T_PUNTO:
+                return "Se detecta '.': operador de acceso a miembros, metodos o librerias (ej: Scientific.sqrt).";
+            case T_COMA:
+                return "Se detecta ',': separador de elementos en listas de parametros o inicializadores de arreglos.";
+
+            // Especiales
+            case T_NEW:
+                return "Se detecta 'new': crea una nueva instancia de un objeto en el Heap de la JVM-J.";
+            case T_RETURN:
+                return "Se detecta 'return': retorna un valor desde un metodo al punto de llamada.";
+            case T_COMENTARIO:
+                return "Se detecta un comentario de linea (//) con contenido: \"" + token.getLexema()
+                    + "\". El compilador lo omite del analisis pero lo documenta.";
+
+            case T_DESCONOCIDO:
+                return "ADVERTENCIA: token no reconocido '" + token.getLexema()
+                    + "'. No pertenece al conjunto de simbolos validos de JODA.";
 
             default:
-                return "Desconocido";
+                return "Token de tipo " + token.getTipo() + " con lexema '" + token.getLexema() + "'.";
         }
     }
 
-    private String resolverDetalle(Token.Tipo tipo) {
-        switch (tipo) {
-            case PR_ENTRY:  return "Punto de entrada del programa";
-            case PR_OBJECT: return "Definicion de clase/objeto";
-            case PR_METHOD: return "Declaracion de metodo";
-            case PR_DEFINE: return "Declaracion de variable";
-            case PR_INT:    return "Tipo de dato entero (32 bits)";
-            case PR_DEC:    return "Tipo de dato decimal (64 bits IEEE 754)";
-            case PR_STRING: return "Tipo de dato cadena (UTF-8)";
-            case PR_BOOL:   return "Tipo de dato booleano";
-            case PR_VOID:   return "Tipo de retorno nulo";
-            case PR_IF:     return "Condicional if";
-            case PR_ELSE:   return "Rama alternativa else";
-            case PR_SELECT: return "Seleccion multiple";
-            case PR_CASE:   return "Caso de seleccion";
-            case PR_LOOP:   return "Ciclo de repeticion";
-            case PR_OUT:    return "Salida estandar a consola";
-            case PR_INPUT:  return "Entrada estandar del usuario";
-            case PR_TRUE:   return "Valor logico verdadero";
-            case PR_FALSE:  return "Valor logico falso";
-            case PR_NEW:    return "Instanciacion de objeto";
-            case PR_RETURN: return "Retorno de valor";
-
-            case LIT_ENTERO:    return "Numero sin decimales";
-            case LIT_DECIMAL:   return "Numero con punto decimal";
-            case LIT_CADENA:    return "Texto entre comillas dobles";
-
-            case IDENTIFICADOR: return "Nombre de variable/objeto (inicia en minuscula)";
-
-            case OP_SUMA:           return "Suma o concatenacion";
-            case OP_RESTA:          return "Resta";
-            case OP_MULTIPLICACION: return "Multiplicacion";
-            case OP_DIVISION:       return "Division";
-            case OP_MODULO:         return "Residuo entero";
-
-            case OP_IGUAL:          return "Comparacion de igualdad";
-            case OP_DIFERENTE:      return "Comparacion de desigualdad";
-            case OP_MAYOR:          return "Comparacion mayor que";
-            case OP_MENOR:          return "Comparacion menor que";
-            case OP_MAYOR_IGUAL:    return "Comparacion mayor o igual";
-            case OP_MENOR_IGUAL:    return "Comparacion menor o igual";
-
-            case OP_AND:            return "Operacion logica AND";
-            case OP_OR:             return "Operacion logica OR";
-            case OP_NOT:            return "Negacion logica NOT";
-
-            case OP_ASIGNACION:     return "Asignacion de valor";
-            case OP_INCREMENTO:     return "Incremento en 1";
-            case OP_DECREMENTO:     return "Decremento en 1";
-
-            case DEL_PUNTO_COMA:    return "Fin de sentencia (obligatorio en JODA)";
-            case DEL_LLAVE_A:       return "Apertura de bloque";
-            case DEL_LLAVE_C:       return "Cierre de bloque";
-            case DEL_PAREN_A:       return "Apertura de parametros/condicion";
-            case DEL_PAREN_C:       return "Cierre de parametros/condicion";
-            case DEL_CORCHETE_A:    return "Apertura de arreglo";
-            case DEL_CORCHETE_C:    return "Cierre de arreglo";
-            case DEL_COMA:          return "Separador de parametros";
-            case DEL_PUNTO:         return "Acceso a metodo o libreria";
-
-            case ERROR:             return "Caracter no reconocido por el lenguaje JODA";
-
-            default: return "";
-        }
-    }
-
-    /* Elimina caracteres especiales no ASCII. */
-    private String limpiar(String texto) {
-        if (texto == null) return "";
-        return texto.replaceAll("[^\\x20-\\x7E]", "?");
+    // Rellena una cadena con espacios hasta la longitud indicada
+    private String padRight(String texto, int longitud) {
+        if (texto.length() >= longitud) return texto.substring(0, longitud);
+        StringBuilder sb = new StringBuilder(texto);
+        while (sb.length() < longitud) sb.append(' ');
+        return sb.toString();
     }
 }

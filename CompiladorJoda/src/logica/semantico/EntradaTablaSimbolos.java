@@ -1,47 +1,82 @@
 package logica.semantico;
 
-/**
- * Representa una entrada en la tabla de simbolos del compilador JODA.
- * Almacena el nombre, tipo, ambito, categoria y linea de declaracion.
- */
+/*
+Representa una entrada en la Tabla de Simbolos del compilador JODA.
+Almacena informacion sobre cada variable o identificador declarado
+en el programa: su nombre, tipo, valor y ambito.
+*/
 public class EntradaTablaSimbolos {
 
-    public enum Categoria {
+    // Tipos de dato validos en JODA
+    public enum TipoDato {
+        INT,
+        DEC,
+        STRING,
+        BOOL,
+        VOID,
+        OBJECT,
+        DESCONOCIDO
+    }
+
+    // Tipos de entrada en la tabla
+    public enum CategoriaEntrada {
         VARIABLE,
-        PARAMETRO,
         METODO,
         CLASE
     }
 
-    private final String    nombre;
-    private final String    tipo;       // int, dec, string, bool, void, nombre-de-clase
-    private final String    ambito;     // "global", nombre del metodo, nombre de la clase
-    private final Categoria categoria;
-    private final int       lineaDecl;
-    private boolean         inicializada;
+    private final String nombre;
+    private TipoDato tipoDato;
+    private CategoriaEntrada categoria;
+    private Object valor;         // Valor actual (usado por el ejecutor)
+    private final int lineaDeclaracion;
+    private boolean inicializada;
 
-    public EntradaTablaSimbolos(String nombre, String tipo, String ambito,
-                                Categoria categoria, int lineaDecl) {
-        this.nombre       = nombre;
-        this.tipo         = tipo;
-        this.ambito       = ambito;
-        this.categoria    = categoria;
-        this.lineaDecl    = lineaDecl;
+    public EntradaTablaSimbolos(String nombre, TipoDato tipoDato,
+                                 CategoriaEntrada categoria, int lineaDeclaracion) {
+        this.nombre = nombre;
+        this.tipoDato = tipoDato;
+        this.categoria = categoria;
+        this.lineaDeclaracion = lineaDeclaracion;
+        this.valor = null;
         this.inicializada = false;
     }
 
-    public String    getNombre()      { return nombre;       }
-    public String    getTipo()        { return tipo;         }
-    public String    getAmbito()      { return ambito;       }
-    public Categoria getCategoria()   { return categoria;    }
-    public int       getLineaDecl()   { return lineaDecl;    }
-    public boolean   isInicializada() { return inicializada; }
+    // Getters y Setters
+    public String getNombre() { return nombre; }
 
-    public void setInicializada(boolean v) { this.inicializada = v; }
+    public TipoDato getTipoDato() { return tipoDato; }
+    public void setTipoDato(TipoDato tipoDato) { this.tipoDato = tipoDato; }
+
+    public CategoriaEntrada getCategoria() { return categoria; }
+
+    public Object getValor() { return valor; }
+    public void setValor(Object valor) {
+        this.valor = valor;
+        this.inicializada = true;
+    }
+
+    public int getLineaDeclaracion() { return lineaDeclaracion; }
+
+    public boolean isInicializada() { return inicializada; }
+
+    // Convierte el tipo dado como cadena al enum TipoDato correspondiente.
+    public static TipoDato parsearTipo(String tipo) {
+        switch (tipo.toLowerCase()) {
+            case "int":    return TipoDato.INT;
+            case "dec":    return TipoDato.DEC;
+            case "string": return TipoDato.STRING;
+            case "bool":   return TipoDato.BOOL;
+            case "void":   return TipoDato.VOID;
+            case "object": return TipoDato.OBJECT;
+            default:       return TipoDato.DESCONOCIDO;
+        }
+    }
 
     @Override
     public String toString() {
-        return nombre + " [" + tipo + "] en ambito='" + ambito
-                + "' cat=" + categoria + " linea=" + lineaDecl;
+        return String.format("EntradaTablaSimbolos{nombre='%s', tipo=%s, categoria=%s, "
+            + "linea=%d, valor=%s, inicializada=%b}",
+            nombre, tipoDato, categoria, lineaDeclaracion, valor, inicializada);
     }
 }

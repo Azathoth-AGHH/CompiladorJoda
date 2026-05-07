@@ -1,474 +1,316 @@
 package logica.nucleo;
 
-import logica.lexico.Token;
-import java.util.*;
+import logica.semantico.EntradaTablaSimbolos;
+import logica.semantico.TablaSimbolos;
+import logica.sintactico.NodoAST;
+
+import java.util.List;
+import java.util.Scanner;
 
 /*
-Ejecutor/Interprete simplificado para el lenguaje JODA.
-Recorre el bloque 'entry' y procesa las siguientes instrucciones:
-- out( expr )  -> genera una linea de salida
-- define tipo id = valor  -> almacena variable en memoria
-- id = expr  -> reasignacion de variable
-- if / loop -> flujo de control basico
+Ejecutor (Interprete) del lenguaje JODA.
+Actua como la JVM-J: recorre el AST y ejecuta cada nodo evaluando
+expresiones, controlando el flujo y gestionando la tabla de simbolos.
+Equivale a la fase de interpretacion del modelo hibrido.
 */
 public class EjecutorJoda {
 
-    // Memoria de variables: nombre -> valor (como String para simplicidad)
-    private final Map<String, String> memoria = new LinkedHashMap<>();
-    private final List<String> salida  = new ArrayList<>();
-
-    /*
-    Ejecuta el bloque 'entry' encontrado en la lista de tokens.
-    */
-    public List<String> ejecutar(List<Token> tokens) {
-        memoria.clear();
-        salida.clear();
-
-        int inicio = buscarEntry(tokens);
-        if (inicio < 0) {
-            salida.add("[JVM-J] No se encontro el bloque 'entry'.");
-            return salida;
-        }
-
-        ejecutarBloque(tokens, inicio);
-        return salida;
+    private final TablaSimbolos memoria;
+    private final List<String> salidasConsola;
+    private final Scanner scanner;
+    public EjecutorJoda(TablaSimbolos memoria, List<String> salidasConsola) {
+        this.memoria = memoria;
+        this.salidasConsola = salidasConsola;
+        this.scanner = new Scanner(System.in);
     }
 
-    //  Busqueda del bloque entry
-    private int buscarEntry(List<Token> tokens) {
-        for (int i = 0; i < tokens.size(); i++) {
-            if (tokens.get(i).getTipo() == Token.Tipo.PR_ENTRY) {
-                // Buscar la llave de apertura
-                for (int j = i + 1; j < tokens.size(); j++) {
-                    if (tokens.get(j).getTipo() == Token.Tipo.DEL_LLAVE_A) {
-                        return j + 1; // inicio del contenido del bloque
-                    }
-                }
-            }
-        }
-        return -1;
+    // Punto de entrada de ejecucion
+    public void ejecutar(NodoAST.NodoEntry nodoEntry) {
+        if (nodoEntry == null) return;
+        ejecutarBloque(nodoEntry.instrucciones);
     }
 
-    //Ejecuta sentencias hasta encontrar '}' o EOF. Retorna el indice post-bloque.
-    private int ejecutarBloque(List<Token> tokens, int pos) {
-        while (pos < tokens.size()) {
-            Token t = tokens.get(pos);
-            if (t.getTipo() == Token.Tipo.DEL_LLAVE_C
-                    || t.getTipo() == Token.Tipo.EOF) {
-                pos++; // consume '}'
-                break;
-            }
-
-            switch (t.getTipo()) {
-                case PR_DEFINE:
-                    pos = ejecutarDefine(tokens, pos);
-                    break;
-                case PR_OUT:
-                    pos = ejecutarOut(tokens, pos);
-                    break;
-                case PR_IF:
-                    pos = ejecutarIf(tokens, pos);
-                    break;
-                case PR_LOOP:
-                    pos = ejecutarLoop(tokens, pos);
-                    break;
-                case IDENTIFICADOR:
-                    pos = ejecutarAsignacion(tokens, pos);
-                    break;
-                case PR_RETURN:
-                    // Consumir hasta ;
-                    while (pos < tokens.size()
-                            && tokens.get(pos).getTipo() != Token.Tipo.DEL_PUNTO_COMA) {
-                        pos++;
-                    }
-                    pos++;
-                    break;
-                default:
-                    pos++;
-                    break;
-            }
+    // Ejecucion de bloques e instrucciones
+    private void ejecutarBloque(List<NodoAST> instrucciones) {
+        memoria.abrirAmbito();
+        for (NodoAST instruccion : instrucciones) {
+            ejecutarNodo(instruccion);
         }
-        return pos;
+        memoria.cerrarAmbito();
     }
 
-    //  Instrucciones soportadas: define, out, if, loop, asignacion
+    private void ejecutarNodo(NodoAST nodo) {
+        if (nodo == null) return;
 
-    // define tipo id = valor ;
-    private int ejecutarDefine(List<Token> tokens, int pos) {
-        pos++; // consume 'define'
-        if (pos >= tokens.size()) return pos;
-
-        // Saltar tipo (y posible [])
-        pos++;
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.DEL_CORCHETE_A) {
-            pos += 2; // consume []
+        if (nodo instanceof NodoAST.NodoDefine) {
+            ejecutarDefine((NodoAST.NodoDefine) nodo);
+        } else if (nodo instanceof NodoAST.NodoAsignacion) {
+            ejecutarAsignacion((NodoAST.NodoAsignacion) nodo);
+        } else if (nodo instanceof NodoAST.NodoIf) {
+            ejecutarIf((NodoAST.NodoIf) nodo);
+        } else if (nodo instanceof NodoAST.NodoLoop) {
+            ejecutarLoop((NodoAST.NodoLoop) nodo);
+        } else if (nodo instanceof NodoAST.NodoSelect) {
+            ejecutarSelect((NodoAST.NodoSelect) nodo);
+        } else if (nodo instanceof NodoAST.NodoOut) {
+            ejecutarOut((NodoAST.NodoOut) nodo);
+        } else if (nodo instanceof NodoAST.NodoInput) {
+            ejecutarInput((NodoAST.NodoInput) nodo);
+        } else if (nodo instanceof NodoAST.NodoIncrementoPostfijo) {
+            ejecutarIncrementoPostfijo((NodoAST.NodoIncrementoPostfijo) nodo);
+        } else if (nodo instanceof NodoAST.NodoObject) {
+            // Los objetos se registran pero no se ejecutan de forma inmediata
+        } else if (nodo instanceof NodoAST.NodoMethod) {
+            // Los metodos se registran pero no se invocan (soporte futuro)
         }
-
-        // Nombre de variable
-        if (pos >= tokens.size()
-                || tokens.get(pos).getTipo() != Token.Tipo.IDENTIFICADOR) {
-            return avanzarHastaPuntoComa(tokens, pos);
-        }
-        String nombre = tokens.get(pos).getLexema();
-        pos++;
-
-        // Asignacion opcional
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.OP_ASIGNACION) {
-            pos++; // consume =
-            String[] resultado = evaluarExpresion(tokens, pos);
-            memoria.put(nombre, resultado[0]);
-            pos = Integer.parseInt(resultado[1]);
-        }
-
-        // Consumir hasta ;
-        return avanzarHastaPuntoComa(tokens, pos);
     }
 
-    //out( expr ) ;
-    private int ejecutarOut(List<Token> tokens, int pos) {
-        pos++; // consume 'out'
-        pos++; // consume '('
+    // Ejecucion de instrucciones especificas
+    private void ejecutarDefine(NodoAST.NodoDefine nodo) {
+        EntradaTablaSimbolos.TipoDato tipo = EntradaTablaSimbolos.parsearTipo(nodo.tipo);
+        EntradaTablaSimbolos entrada = new EntradaTablaSimbolos(
+            nodo.identificador, tipo,
+            EntradaTablaSimbolos.CategoriaEntrada.VARIABLE, nodo.getLinea()
+        );
 
-        String[] resultado = evaluarExpresion(tokens, pos);
-        String valor = resultado[0];
-        pos = Integer.parseInt(resultado[1]);
-
-        salida.add(limpiar(valor));
-
-        // Consumir ')' y ';'
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_C) {
-            pos++;
+        Object valor = null;
+        if (nodo.expresion != null) {
+            valor = evaluarExpresion(nodo.expresion);
+            // Coercion inteligente: int -> dec si el tipo declarado es dec
+            if (tipo == EntradaTablaSimbolos.TipoDato.DEC && valor instanceof Integer) {
+                valor = ((Integer) valor).doubleValue();
+            }
         }
-        return avanzarHastaPuntoComa(tokens, pos);
+
+        entrada.setValor(valor);
+        memoria.declarar(entrada);
     }
 
-    // if ( cond ) { bloque } [else { bloque }]
-    private int ejecutarIf(List<Token> tokens, int pos) {
-        pos++; // consume 'if'
-        pos++; // consume '('
+    private void ejecutarAsignacion(NodoAST.NodoAsignacion nodo) {
+        Object valor = evaluarExpresion(nodo.expresion);
+        EntradaTablaSimbolos entrada = memoria.buscar(nodo.identificador);
 
-        String[] evalCond = evaluarExpresion(tokens, pos);
-        boolean condicion = esVerdadero(evalCond[0]);
-        pos = Integer.parseInt(evalCond[1]);
-
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_C) {
-            pos++;
-        }
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.DEL_LLAVE_A) {
-            pos++;
-        }
-
-        if (condicion) {
-            pos = ejecutarBloque(tokens, pos);
-        } else {
-            pos = saltarBloque(tokens, pos);
-        }
-
-        // else opcional
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.PR_ELSE) {
-            pos++; // consume 'else'
-            if (pos < tokens.size()
-                    && tokens.get(pos).getTipo() == Token.Tipo.DEL_LLAVE_A) {
-                pos++;
-            }
-            if (!condicion) {
-                pos = ejecutarBloque(tokens, pos);
-            } else {
-                pos = saltarBloque(tokens, pos);
+        if (entrada != null) {
+            // Coercion inteligente
+            if (entrada.getTipoDato() == EntradaTablaSimbolos.TipoDato.DEC && valor instanceof Integer) {
+                valor = ((Integer) valor).doubleValue();
             }
         }
-        return pos;
+
+        boolean exito = memoria.asignar(nodo.identificador, valor);
+        if (!exito) {
+            // No deberia llegar aqui si el analisis semantico fue exitoso
+            agregarSalida("[ERROR] Variable no declarada: " + nodo.identificador);
+        }
     }
 
-    // loop ( cond ) { bloque }
-    private int ejecutarLoop(List<Token> tokens, int pos) {
-        pos++; // consume 'loop'
-        pos++; // consume '('
+    private void ejecutarIf(NodoAST.NodoIf nodo) {
+        Object condicion = evaluarExpresion(nodo.condicion);
+        if (esVerdadero(condicion)) {
+            ejecutarBloque(nodo.bloqueThen);
+        } else if (nodo.bloqueElse != null) {
+            ejecutarBloque(nodo.bloqueElse);
+        }
+    }
 
-        int inicioCondicion = pos;
+    private void ejecutarLoop(NodoAST.NodoLoop nodo) {
+        int iteraciones = 0;
+        final int MAX_ITERACIONES = 100_000; // Proteccion contra bucles infinitos
 
-        // Limite de iteraciones para evitar bucles infinitos en la VM
-        int maxIteraciones = 10_000;
-        int iteraciones    = 0;
-
-        while (iteraciones < maxIteraciones) {
-            String[] evalCond = evaluarExpresion(tokens, inicioCondicion);
-            boolean condicion = esVerdadero(evalCond[0]);
-            pos = Integer.parseInt(evalCond[1]);
-
-            if (pos < tokens.size()
-                    && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_C) {
-                pos++;
-            }
-            if (pos < tokens.size()
-                    && tokens.get(pos).getTipo() == Token.Tipo.DEL_LLAVE_A) {
-                pos++;
-            }
-
-            if (!condicion) {
-                pos = saltarBloque(tokens, pos);
-                break;
-            }
-
-            int posPost = ejecutarBloque(tokens, pos);
+        while (esVerdadero(evaluarExpresion(nodo.condicion))) {
+            ejecutarBloque(nodo.cuerpo);
             iteraciones++;
-
-            // Recalcular condicion desde el inicio del loop en la proxima iteracion
-            // (se re-parsea la condicion cada vez)
-            pos = posPost;
-            // Para re-evaluar la condicion necesitamos retroceder al inicio:
-            pos = inicioCondicion; // re-iniciar evaluacion de condicion
-        }
-
-        if (iteraciones >= maxIteraciones) {
-            salida.add("[JVM-J] Advertencia: limite de iteraciones alcanzado en 'loop'.");
-        }
-
-        // Saltar el bloque si quedamos al inicio por el reset
-        // Buscamos el '}' de cierre del loop para avanzar el cursor principal
-        pos = Integer.parseInt(evaluarExpresion(tokens, inicioCondicion)[1]);
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_C) pos++;
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.DEL_LLAVE_A) pos++;
-        return saltarBloque(tokens, pos);
-    }
-
-    // id = expr ;
-    private int ejecutarAsignacion(List<Token> tokens, int pos) {
-        String nombre = tokens.get(pos).getLexema();
-        pos++;
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.OP_ASIGNACION) {
-            pos++; // consume =
-            String[] resultado = evaluarExpresion(tokens, pos);
-            memoria.put(nombre, resultado[0]);
-            pos = Integer.parseInt(resultado[1]);
-        } else if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.OP_INCREMENTO) {
-            String val = memoria.getOrDefault(nombre, "0");
-            try {
-                double d = Double.parseDouble(val);
-                memoria.put(nombre, formatearNumero(d + 1));
-            } catch (NumberFormatException e) { /* ignorar */ }
-            pos++;
-        } else if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.OP_DECREMENTO) {
-            String val = memoria.getOrDefault(nombre, "0");
-            try {
-                double d = Double.parseDouble(val);
-                memoria.put(nombre, formatearNumero(d - 1));
-            } catch (NumberFormatException e) { /* ignorar */ }
-            pos++;
-        }
-        return avanzarHastaPuntoComa(tokens, pos);
-    }
-
-    /*Evaluacion de expresiones
-    Evalua una expresion a partir de 'pos'.
-    Retorna un arreglo de dos elementos: [valor, nuevaPosicion].
-    */
-    private String[] evaluarExpresion(List<Token> tokens, int pos) {
-        if (pos >= tokens.size()) return new String[]{"", String.valueOf(pos)};
-
-        String[] termIzq = evaluarTermino(tokens, pos);
-        String valIzq = termIzq[0];
-        pos = Integer.parseInt(termIzq[1]);
-
-        while (pos < tokens.size() && esOperadorBinario(tokens.get(pos).getTipo())) {
-            Token op = tokens.get(pos);
-            pos++;
-            String[] termDer = evaluarTermino(tokens, pos);
-            String valDer = termDer[0];
-            pos = Integer.parseInt(termDer[1]);
-            valIzq = aplicarOperador(valIzq, op.getTipo(), valDer);
-        }
-        return new String[]{valIzq, String.valueOf(pos)};
-    }
-
-    private String[] evaluarTermino(List<Token> tokens, int pos) {
-        if (pos >= tokens.size()) return new String[]{"", String.valueOf(pos)};
-
-        Token t = tokens.get(pos);
-        switch (t.getTipo()) {
-            case LIT_ENTERO:
-            case LIT_DECIMAL:
-                return new String[]{t.getLexema(), String.valueOf(pos + 1)};
-
-            case LIT_CADENA:
-                // Quitar comillas
-                String s = t.getLexema();
-                if (s.length() >= 2) s = s.substring(1, s.length() - 1);
-                return new String[]{s, String.valueOf(pos + 1)};
-
-            case PR_TRUE:
-                return new String[]{"true", String.valueOf(pos + 1)};
-            case PR_FALSE:
-                return new String[]{"false", String.valueOf(pos + 1)};
-
-            case IDENTIFICADOR:
-                String nombre = t.getLexema();
-                pos++;
-                // Acceso a metodo: Scientific.sqrt etc. (simplificado)
-                if (pos < tokens.size()
-                        && tokens.get(pos).getTipo() == Token.Tipo.DEL_PUNTO) {
-                    pos++;
-                    if (pos < tokens.size()) pos++;
-                    if (pos < tokens.size()
-                            && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_A) {
-                        pos++;
-                        String[] arg = evaluarExpresion(tokens, pos);
-                        pos = Integer.parseInt(arg[1]);
-                        String resultado = aplicarMetodoLibreria(nombre, arg[0]);
-                        if (pos < tokens.size()
-                                && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_C) {
-                            pos++;
-                        }
-                        return new String[]{resultado, String.valueOf(pos)};
-                    }
-                }
-                String valor = memoria.getOrDefault(nombre, "0");
-                return new String[]{valor, String.valueOf(pos)};
-
-            case OP_NOT:
-                String[] sub = evaluarTermino(tokens, pos + 1);
-                String negado = esVerdadero(sub[0]) ? "false" : "true";
-                return new String[]{negado, sub[1]};
-
-            case OP_RESTA:
-                String[] subN = evaluarTermino(tokens, pos + 1);
-                try {
-                    double d = Double.parseDouble(subN[0]);
-                    return new String[]{formatearNumero(-d), subN[1]};
-                } catch (NumberFormatException e) {
-                    return new String[]{"0", subN[1]};
-                }
-
-            case DEL_PAREN_A:
-                String[] inner = evaluarExpresion(tokens, pos + 1);
-                pos = Integer.parseInt(inner[1]);
-                if (pos < tokens.size()
-                        && tokens.get(pos).getTipo() == Token.Tipo.DEL_PAREN_C) {
-                    pos++;
-                }
-                return new String[]{inner[0], String.valueOf(pos)};
-
-            default:
-                return new String[]{"", String.valueOf(pos)};
-        }
-    }
-
-    private String aplicarOperador(String izq, Token.Tipo op, String der) {
-        // Concatenacion de cadenas con +
-        if (op == Token.Tipo.OP_SUMA) {
-            // Si alguno no es numerico, concatenar
-            try {
-                double a = Double.parseDouble(izq);
-                double b = Double.parseDouble(der);
-                return formatearNumero(a + b);
-            } catch (NumberFormatException e) {
-                return limpiar(izq + der);
+            if (iteraciones > MAX_ITERACIONES) {
+                agregarSalida("[ERROR JVM-J] Limite de iteraciones superado. Posible bucle infinito.");
+                break;
             }
         }
+    }
+
+    private void ejecutarSelect(NodoAST.NodoSelect nodo) {
+        Object valorVariable = evaluarExpresion(nodo.variable);
+        for (NodoAST.NodoCaso caso : nodo.casos) {
+            Object valorCaso = evaluarExpresion(caso.valor);
+            if (sonIguales(valorVariable, valorCaso)) {
+                ejecutarBloque(caso.instrucciones);
+                break; // break implicito como en JODA spec
+            }
+        }
+    }
+
+    private void ejecutarOut(NodoAST.NodoOut nodo) {
+        Object valor = evaluarExpresion(nodo.expresion);
+        String salida = objetoAString(valor);
+        agregarSalida(salida);
+    }
+
+    private void ejecutarInput(NodoAST.NodoInput nodo) {
+        // En modo automatico (sin terminal interactivo), usamos valor por defecto
+        agregarSalida("[JVM-J] Esperando entrada para '" + nodo.identificador + "': ");
+        String entrada = "0"; // Valor predeterminado para ejecucion no interactiva
+
+        EntradaTablaSimbolos simbolo = memoria.buscar(nodo.identificador);
+        if (simbolo != null) {
+            Object valorParsed = parsearEntrada(entrada, simbolo.getTipoDato());
+            memoria.asignar(nodo.identificador, valorParsed);
+        }
+    }
+
+    private void ejecutarIncrementoPostfijo(NodoAST.NodoIncrementoPostfijo nodo) {
+        EntradaTablaSimbolos entrada = memoria.buscar(nodo.identificador);
+        if (entrada == null) return;
+
+        Object valorActual = entrada.getValor();
+        Object nuevoValor;
+
+        if (valorActual instanceof Integer) {
+            int v = (Integer) valorActual;
+            nuevoValor = nodo.operador.equals("++") ? v + 1 : v - 1;
+        } else if (valorActual instanceof Double) {
+            double v = (Double) valorActual;
+            nuevoValor = nodo.operador.equals("++") ? v + 1.0 : v - 1.0;
+        } else {
+            return;
+        }
+        memoria.asignar(nodo.identificador, nuevoValor);
+    }
+
+    // Evaluacion de expresiones
+    Object evaluarExpresion(NodoAST nodo) {
+        if (nodo == null) return null;
+
+        if (nodo instanceof NodoAST.NodoLiteralEntero) {
+            return ((NodoAST.NodoLiteralEntero) nodo).valor;
+        }
+        if (nodo instanceof NodoAST.NodoLiteralDecimal) {
+            return ((NodoAST.NodoLiteralDecimal) nodo).valor;
+        }
+        if (nodo instanceof NodoAST.NodoLiteralCadena) {
+            return ((NodoAST.NodoLiteralCadena) nodo).valor;
+        }
+        if (nodo instanceof NodoAST.NodoLiteralBool) {
+            return ((NodoAST.NodoLiteralBool) nodo).valor;
+        }
+        if (nodo instanceof NodoAST.NodoIdentificador) {
+            EntradaTablaSimbolos entrada = memoria.buscar(((NodoAST.NodoIdentificador) nodo).nombre);
+            return (entrada != null) ? entrada.getValor() : null;
+        }
+        if (nodo instanceof NodoAST.NodoBinario) {
+            return evaluarBinario((NodoAST.NodoBinario) nodo);
+        }
+        if (nodo instanceof NodoAST.NodoUnario) {
+            return evaluarUnario((NodoAST.NodoUnario) nodo);
+        }
+        return null;
+    }
+
+    private Object evaluarBinario(NodoAST.NodoBinario nodo) {
+        Object izq = evaluarExpresion(nodo.izquierda);
+        Object der = evaluarExpresion(nodo.derecha);
+        String op = nodo.operador;
+
+        // Coercion Inteligente: si alguno es string, concatenar
+        if ((izq instanceof String || der instanceof String)
+                && (op.equals("+"))) {
+            return objetoAString(izq) + objetoAString(der);
+        }
+
+        // Operadores logicos
+        if (op.equals("&&")) return esVerdadero(izq) && esVerdadero(der);
+        if (op.equals("||")) return esVerdadero(izq) || esVerdadero(der);
+
+        // Operadores relacionales sobre cualquier tipo
+        if (op.equals("==")) return sonIguales(izq, der);
+        if (op.equals("!=")) return !sonIguales(izq, der);
+
+        // Operaciones numericas
+        double vi = toDouble(izq);
+        double vd = toDouble(der);
+
+        switch (op) {
+            case "+":  return esEnteros(izq, der) ? (int)(vi + vd) : (vi + vd);
+            case "-":  return esEnteros(izq, der) ? (int)(vi - vd) : (vi - vd);
+            case "*":  return esEnteros(izq, der) ? (int)(vi * vd) : (vi * vd);
+            case "/":  return vd != 0 ? vi / vd : (agregarSalida("[ERROR JVM-J] Division por cero.") == null ? 0.0 : 0.0);
+            case "%":  return vd != 0 ? (int)(vi % vd) : 0;
+            case ">":  return vi > vd;
+            case "<":  return vi < vd;
+            case ">=": return vi >= vd;
+            case "<=": return vi <= vd;
+            default:
+                return null;
+        }
+    }
+
+    private Object evaluarUnario(NodoAST.NodoUnario nodo) {
+        Object operando = evaluarExpresion(nodo.operando);
+        switch (nodo.operador) {
+            case "!": return !esVerdadero(operando);
+            case "-":
+                if (operando instanceof Integer) return -(Integer) operando;
+                if (operando instanceof Double)  return -(Double) operando;
+                return null;
+            default:  return operando;
+        }
+    }
+
+    // Metodos utilitarios de la JVM-J
+    private boolean esVerdadero(Object valor) {
+        if (valor instanceof Boolean) return (Boolean) valor;
+        if (valor instanceof Integer) return (Integer) valor != 0;
+        if (valor instanceof Double)  return (Double) valor != 0.0;
+        if (valor instanceof String)  return !((String) valor).isEmpty();
+        return false;
+    }
+
+    private boolean sonIguales(Object a, Object b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        // Comparacion numerica con promocion
+        if ((a instanceof Number) && (b instanceof Number)) {
+            return toDouble(a) == toDouble(b);
+        }
+        return a.equals(b);
+    }
+
+    private double toDouble(Object valor) {
+        if (valor instanceof Integer) return ((Integer) valor).doubleValue();
+        if (valor instanceof Double)  return (Double) valor;
+        if (valor instanceof Boolean) return ((Boolean) valor) ? 1.0 : 0.0;
+        return 0.0;
+    }
+
+    private boolean esEnteros(Object a, Object b) {
+        return (a instanceof Integer) && (b instanceof Integer);
+    }
+
+    private String objetoAString(Object valor) {
+        if (valor == null)           return "null";
+        if (valor instanceof Double) {
+            double d = (Double) valor;
+            if (d == Math.floor(d) && !Double.isInfinite(d)) {
+                return String.valueOf((long) d);
+            }
+            return String.valueOf(d);
+        }
+        return String.valueOf(valor);
+    }
+
+    private Object parsearEntrada(String texto, EntradaTablaSimbolos.TipoDato tipo) {
         try {
-            double a = Double.parseDouble(izq);
-            double b = Double.parseDouble(der);
-            switch (op) {
-                case OP_RESTA:          return formatearNumero(a - b);
-                case OP_MULTIPLICACION: return formatearNumero(a * b);
-                case OP_DIVISION:       return b != 0 ? formatearNumero(a / b) : "Error: division por cero";
-                case OP_MODULO:         return formatearNumero(a % b);
-                case OP_IGUAL:          return String.valueOf(a == b);
-                case OP_DIFERENTE:      return String.valueOf(a != b);
-                case OP_MAYOR:          return String.valueOf(a > b);
-                case OP_MENOR:          return String.valueOf(a < b);
-                case OP_MAYOR_IGUAL:    return String.valueOf(a >= b);
-                case OP_MENOR_IGUAL:    return String.valueOf(a <= b);
-                default:                return "0";
+            switch (tipo) {
+                case INT:    return Integer.parseInt(texto.trim());
+                case DEC:    return Double.parseDouble(texto.trim());
+                case BOOL:   return Boolean.parseBoolean(texto.trim());
+                default:     return texto;
             }
         } catch (NumberFormatException e) {
-            // Comparaciones de cadenas
-            switch (op) {
-                case OP_IGUAL:     return String.valueOf(izq.equals(der));
-                case OP_DIFERENTE: return String.valueOf(!izq.equals(der));
-                default:           return "false";
-            }
+            return texto;
         }
     }
 
-    private String aplicarMetodoLibreria(String libreria, String argumento) {
-        // Simplificacion de Scientific.*
-        try {
-            double d = Double.parseDouble(argumento);
-            if (libreria.equalsIgnoreCase("Scientific")) {
-                return formatearNumero(Math.sqrt(d));
-            }
-        } catch (NumberFormatException e) { /* ignorar */ }
-        return argumento;
-    }
-
-    /*  Utilidades
-    Salta un bloque completo { ... } respetando bloques anidados.
-    */
-    private int saltarBloque(List<Token> tokens, int pos) {
-        int nivel = 1;
-        while (pos < tokens.size() && nivel > 0) {
-            Token.Tipo tipo = tokens.get(pos).getTipo();
-            if (tipo == Token.Tipo.DEL_LLAVE_A) nivel++;
-            else if (tipo == Token.Tipo.DEL_LLAVE_C) nivel--;
-            pos++;
-        }
-        return pos;
-    }
-
-    private int avanzarHastaPuntoComa(List<Token> tokens, int pos) {
-        while (pos < tokens.size()
-                && tokens.get(pos).getTipo() != Token.Tipo.DEL_PUNTO_COMA
-                && tokens.get(pos).getTipo() != Token.Tipo.EOF) {
-            pos++;
-        }
-        if (pos < tokens.size()
-                && tokens.get(pos).getTipo() == Token.Tipo.DEL_PUNTO_COMA) {
-            pos++;
-        }
-        return pos;
-    }
-
-    private boolean esVerdadero(String valor) {
-        if ("true".equalsIgnoreCase(valor)) return true;
-        if ("false".equalsIgnoreCase(valor)) return false;
-        try { return Double.parseDouble(valor) != 0; }
-        catch (NumberFormatException e) { return !valor.isEmpty(); }
-    }
-
-    private boolean esOperadorBinario(Token.Tipo tipo) {
-        switch (tipo) {
-            case OP_SUMA: case OP_RESTA: case OP_MULTIPLICACION:
-            case OP_DIVISION: case OP_MODULO:
-            case OP_IGUAL: case OP_DIFERENTE:
-            case OP_MAYOR: case OP_MENOR:
-            case OP_MAYOR_IGUAL: case OP_MENOR_IGUAL:
-            case OP_AND: case OP_OR:
-                return true;
-            default: return false;
-        }
-    }
-
-    private String formatearNumero(double d) {
-        if (d == Math.floor(d) && !Double.isInfinite(d)) {
-            return String.valueOf((long) d);
-        }
-        return String.valueOf(d);
-    }
-
-    private String limpiar(String texto) {
-        if (texto == null) return "";
-        return texto.replaceAll("[^\\x20-\\x7E]", "?");
+    private Object agregarSalida(String mensaje) {
+        salidasConsola.add(mensaje);
+        return null;
     }
 }

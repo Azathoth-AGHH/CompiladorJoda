@@ -1,98 +1,40 @@
 package vista_consola;
 
 import logica.nucleo.CompiladorJoda;
+import logica.nucleo.ResultadoCompilacion;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+/*Clase principal del compilador
+Coordina la ejecucion del pipeline(conjunto de procesos) hibrido y
+manda a llamar a ImpresorResultados*/
 public class Main {
 
-    private static final String ARCHIVO_EJEMPLO = "recursos/ejemplo.joda";
+    private static final String ARCHIVO_DEFECTO = "recursos/ejemplo.joda";
 
     public static void main(String[] args) {
-
-        configurarConsola();
-        mostrarBienvenida();
-
-        String rutaArchivo = obtenerRutaArchivo(args);
-        String codigoFuente = leerArchivo(rutaArchivo);
-
-        if (codigoFuente == null) {
-            return;
+        // Determina la ruta del archivo a compilar
+        String rutaArchivo;
+        if (args.length >= 1) {
+            rutaArchivo = args[0];
+        } else {
+            rutaArchivo = ARCHIVO_DEFECTO;
         }
 
-        ejecutarCompilacion(codigoFuente);
-    }
+        // Instanciar el compilador (nucleo del sistema hibrido)
+        CompiladorJoda compilador = new CompiladorJoda();
 
-    // CONFIGURACION INICIAL
-    private static void configurarConsola() {
-        try {
-            System.setProperty("file.encoding", "UTF-8");
-        } catch (Exception ignored) {}
-    }
 
-    private static void mostrarBienvenida() {
-        System.out.println("══════════════════════════════════════════════════════");
-        System.out.println("              COMPILADOR JODA v1.0");
-        System.out.println("══════════════════════════════════════════════════════");
-        System.out.println();
-    }
+        /*Ejecuta el pipeline de esta forma:
+            1.Lectura
+            2.Lexico
+            3.Documentacion
+            4.Sintactico
+            5.Semantico
+            6.JVM-J (si no hay errores)
+         */
+        ResultadoCompilacion resultado = compilador.compilarYEjecutar(rutaArchivo);
 
-    // ARCHIVO
-    private static String obtenerRutaArchivo(String[] args) {
-
-        if (args.length > 0) {
-            return args[0];
-        }
-
-        System.out.println("[INFO] No se especifico archivo.");
-        System.out.println("[INFO] Se utilizara archivo de ejemplo.\n");
-        return ARCHIVO_EJEMPLO;
-    }
-
-    private static String leerArchivo(String rutaArchivo) {
-
-        try {
-            Path ruta = Paths.get(rutaArchivo);
-            byte[] bytes = Files.readAllBytes(ruta);
-
-            System.out.println("[OK] Archivo cargado correctamente:");
-            System.out.println("     " + rutaArchivo + "\n");
-
-            return new String(bytes, StandardCharsets.UTF_8);
-
-        } catch (IOException e) {
-
-            System.out.println("[ERROR] No se pudo leer el archivo.");
-            System.out.println("Ruta: " + rutaArchivo);
-            System.out.println("Causa: " + e.getMessage());
-            System.out.println();
-            System.out.println("Uso correcto:");
-            System.out.println("java -cp out vista_consola.Main archivo.joda");
-
-            return null;
-        }
-    }
-
-    // COMPILACION
-    private static void ejecutarCompilacion(String codigoFuente) {
-
-        try {
-            CompiladorJoda compilador = new CompiladorJoda();
-
-            CompiladorJoda.ResultadoCompilacion resultado =
-                    compilador.compilar(codigoFuente);
-
-            ImpresorResultados impresor = new ImpresorResultados();
-            impresor.imprimir(resultado);
-
-        } catch (Exception e) {
-
-            System.out.println("[ERROR INTERNO DEL COMPILADOR]");
-            System.out.println(e.getMessage());
-        }
+        // Manda a llamar a ImpresorResultados
+        ImpresorResultados impresor = new ImpresorResultados();
+        impresor.imprimirReporte(resultado);
     }
 }

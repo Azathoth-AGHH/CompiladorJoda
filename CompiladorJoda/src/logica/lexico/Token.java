@@ -1,78 +1,95 @@
 package logica.lexico;
 
-/*
-Representa un token reconocido por el analizador lexico.
-Contiene el tipo (categoria), el lexema y la linea de origen.
+
+/* Esta clase define la estructura de un token
+unidad basica de informacion que el analizador lexico produce a partir del codigo fuente.
+Cada token tiene un tipo (definido por la enumeracion Tipo),
+un lexema (la cadena original del codigo que corresponde al token)
+y la linea donde se encuentra en el codigo fuente.
 */
 public class Token {
 
+    // Enumeracion de todos los tipos de tokens validos en JODA
     public enum Tipo {
-        // Palabras reservadas - estructura
-        PR_ENTRY, PR_OBJECT, PR_METHOD,
+        // Palabras reservadas de estructura
+        T_ENTRY,
+        T_OBJECT,
+        T_METHOD,
 
-        // Palabras reservadas - definicion de tipo
-        PR_DEFINE, PR_INT, PR_DEC, PR_STRING, PR_BOOL, PR_VOID,
+        // Palabras reservadas de definicion
+        T_DEFINE,
+        T_INT,
+        T_DEC,
+        T_STRING,
+        T_BOOL,
+        T_VOID,
 
-        // Palabras reservadas - control
-        PR_IF, PR_ELSE, PR_SELECT, PR_CASE, PR_LOOP,
+        // Palabras reservadas de control
+        T_IF,
+        T_ELSE,
+        T_SELECT,
+        T_CASE,
+        T_LOOP,
 
-        // Palabras reservadas - entrada/salida
-        PR_OUT, PR_INPUT,
-
-        // Palabras reservadas - valores logicos
-        PR_TRUE, PR_FALSE,
-
-        // Palabras reservadas - OOP
-        PR_NEW, PR_RETURN,
+        // Palabras reservadas de entrada/salida
+        T_OUT,
+        T_INPUT,
 
         // Literales
-        LIT_ENTERO,
-        LIT_DECIMAL,
-        LIT_CADENA,
+        T_LITERAL_ENTERO,
+        T_LITERAL_DECIMAL,
+        T_LITERAL_CADENA,
+        T_LITERAL_BOOL,
 
         // Identificadores
-        IDENTIFICADOR,
+        T_IDENTIFICADOR,
 
         // Operadores aritmeticos
-        OP_SUMA,
-        OP_RESTA,
-        OP_MULTIPLICACION,
-        OP_DIVISION,
-        OP_MODULO,
+        T_SUMA,
+        T_RESTA,
+        T_MULTIPLICACION,
+        T_DIVISION,
+        T_MODULO,
 
         // Operadores relacionales
-        OP_IGUAL,
-        OP_DIFERENTE,
-        OP_MAYOR,
-        OP_MENOR,
-        OP_MAYOR_IGUAL,
-        OP_MENOR_IGUAL,
+        T_IGUAL_IGUAL,
+        T_DIFERENTE,
+        T_MAYOR,
+        T_MENOR,
+        T_MAYOR_IGUAL,
+        T_MENOR_IGUAL,
 
         // Operadores logicos
-        OP_AND,
-        OP_OR,
-        OP_NOT,
+        T_AND,
+        T_OR,
+        T_NOT,
 
         // Operadores de asignacion e incremento
-        OP_ASIGNACION,
-        OP_INCREMENTO,
-        OP_DECREMENTO,
+        T_ASIGNACION,
+        T_INCREMENTO,
+        T_DECREMENTO,
 
         // Delimitadores y agrupadores
-        DEL_PUNTO_COMA,
-        DEL_LLAVE_A,
-        DEL_LLAVE_C,
-        DEL_PAREN_A,
-        DEL_PAREN_C,
-        DEL_CORCHETE_A,
-        DEL_CORCHETE_C,
-        DEL_COMA,
-        DEL_PUNTO,
-        
+        T_PUNTO_Y_COMA,
+        T_LLAVE_ABRE,
+        T_LLAVE_CIERRA,
+        T_PARENTESIS_ABRE,
+        T_PARENTESIS_CIERRA,
+        T_CORCHETE_ABRE,
+        T_CORCHETE_CIERRA,
+        T_PUNTO,
+        T_COMA,
+
+        // Palabras clave especiales
+        T_NEW,
+        T_RETURN,
+        T_TRUE,
+        T_FALSE,
+
         // Especiales
-        COMENTARIO,
-        ERROR,
-        EOF
+        T_COMENTARIO,
+        T_FIN_ARCHIVO,
+        T_DESCONOCIDO
     }
 
     private final Tipo tipo;
@@ -80,23 +97,25 @@ public class Token {
     private final int linea;
 
     public Token(Tipo tipo, String lexema, int linea) {
-        this.tipo   = tipo;
+        this.tipo = tipo;
         this.lexema = lexema;
-        this.linea  = linea;
+        this.linea = linea;
     }
 
-    public Tipo getTipo(){
+    public Tipo getTipo() {
         return tipo;
     }
-    public String getLexema(){
+
+    public String getLexema() {
         return lexema;
     }
-    public int getLinea(){
+
+    public int getLinea() {
         return linea;
     }
 
     @Override
     public String toString() {
-        return "Token[" + tipo + ", '" + lexema + "', linea=" + linea + "]";
+        return "Token{tipo=" + tipo + ", lexema='" + lexema + "', linea=" + linea + "}";
     }
 }

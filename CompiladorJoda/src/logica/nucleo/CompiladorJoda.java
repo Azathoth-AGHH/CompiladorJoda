@@ -6,119 +6,143 @@ import logica.lexico.Token;
 import logica.semantico.AnalizadorSemantico;
 import logica.semantico.EntradaTablaSimbolos;
 import logica.sintactico.AnalizadorSintactico;
+import logica.sintactico.NodoAST;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /*
-CompiladorJoda es la clase central que coordina el proceso de compilacion y ejecucion
-del lenguaje JODA. Se divide en dos fases principales:
-
-Fase 1 - Analisis:
-  a) Lexico    -> tokeniza el codigo fuente
-  b) Sintactico -> valida la estructura gramatical
-  c) Semantico  -> valida tipos, ambitos y redeclaraciones
-
-Fase 2 - Ejecucion (simulada): Si no hay errores, se ejecuta el bloque 'entry'.
-*/
+Compilador principal de JODA.
+Coordina todas las fases del modelo hibrido:
+    1. Lectura del archivo fuente.
+    2. Analisis Lexico -> Lista de Tokens.
+    3. Documentacion -> Narrativa del codigo.
+    4. Analisis Sintactico -> AST.
+    5. Analisis Semantico -> Validacion de tipos y ambitos.
+    6. Ejecucion en JVM-J (solo si no hay errores).
+ 
+Retorna un objeto ResultadoCompilacion para que la vista lo interprete.
+ */
 public class CompiladorJoda {
 
-    //  Resultado global del compilador
-    public static class ResultadoCompilacion {
-        private final List<Token> tokens;
-        private final List<AnalizadorSintactico.ErrorSintactico> erroresSintacticos;
-        private final AnalizadorSemantico.ResultadoSemantico resultadoSemantico;
-        private final List<Documentador.FilaDoc> tablaDoc;
-        private final List<String> salidaEjecucion;
-        private final boolean exitoso;
+    //Ejecuta el pipeline completo de compilacion e interpretacion.
 
-        public ResultadoCompilacion(
-                List<Token> tokens,
-                List<AnalizadorSintactico.ErrorSintactico> erroresSintacticos,
-                AnalizadorSemantico.ResultadoSemantico resultadoSemantico,
-                List<Documentador.FilaDoc> tablaDoc,
-                List<String> salidaEjecucion,
-                boolean exitoso) {
-                this.tokens = tokens;
-                this.erroresSintacticos = erroresSintacticos;
-                this.resultadoSemantico = resultadoSemantico;
-                this.tablaDoc = tablaDoc;
-                this.salidaEjecucion = salidaEjecucion;
-                this.exitoso = exitoso;
+    public ResultadoCompilacion compilarYEjecutar(String rutaArchivo) {
+        ResultadoCompilacion resultado = new ResultadoCompilacion();
+        resultado.setNombreArchivo(rutaArchivo);
+
+        // PASO 0: Lectura del archivo fuente
+        String codigoFuente = leerArchivo(rutaArchivo);
+        if (codigoFuente == null) {
+            resultado.setErroresLexicos(List.of(
+                "Error fatal: no se pudo leer el archivo '" + rutaArchivo + "'."));
+            resultado.setExitoCompilacion(false);
+            return resultado;
+        }
+        resultado.setCodigoFuente(limpiarCodigo(codigoFuente));
+
+        // PASO 1: Analisis Lexico
+        AnalizadorLexico analizadorLexico = new AnalizadorLexico(resultado.getCodigoFuente());
+        List<Token> tokens = analizadorLexico.analizar();
+        resultado.setTokens(tokens);
+        resultado.setErroresLexicos(analizadorLexico.getErrores());
+
+        // PASO 2: Documentacion del codigo
+        Documentador documentador = new Documentador();
+        String documentacion = documentador.documentar(tokens, resultado.getCodigoFuente());
+        resultado.setDocumentacion(documentacion);
+
+        // Si hay errores lexicos, detener pipeline
+        if (analizadorLexico.tieneErrores()) {
+            resultado.setExitoCompilacion(false);
+            resultado.setErroresSintacticos(new ArrayList<>());
+            resultado.setErroresSemanticos(new ArrayList<>());
+            resultado.setAdvertenciasSemanticas(new ArrayList<>());
+            resultado.setSalidasEjecucion(new ArrayList<>());
+            return resultado;
         }
 
-        public List<Token> getTokens(){
-                return tokens;
+        // PASO 3: Analisis Sintactico
+        AnalizadorSintactico analizadorSintactico = new AnalizadorSintactico(tokens);
+        NodoAST.NodoEntry arbol = analizadorSintactico.parsear();
+        resultado.setArbolSintactico(arbol);
+        resultado.setErroresSintacticos(analizadorSintactico.getErrores());
+
+        // Si hay errores sintacticos, detener pipeline
+        if (analizadorSintactico.tieneErrores() || arbol == null) {
+            resultado.setExitoCompilacion(false);
+            resultado.setErroresSemanticos(new ArrayList<>());
+            resultado.setAdvertenciasSemanticas(new ArrayList<>());
+            resultado.setSalidasEjecucion(new ArrayList<>());
+            return resultado;
         }
 
-        public List<AnalizadorSintactico.ErrorSintactico> getErroresSintacticos(){
-                return erroresSintacticos;
+        // PASO 4: Analisis Semantico
+        AnalizadorSemantico analizadorSemantico = new AnalizadorSemantico();
+        analizadorSemantico.analizar(arbol);
+        resultado.setErroresSemanticos(analizadorSemantico.getErrores());
+        resultado.setAdvertenciasSemanticas(analizadorSemantico.getAdvertencias());
+
+        // Poblar tabla de simbolos para reporte
+        resultado.setTablaSimbolos(analizadorSemantico.getRegistroGlobal());
+
+        // Si hay errores semanticos, detener pipeline
+        if (analizadorSemantico.tieneErrores()) {
+            resultado.setExitoCompilacion(false);
+            resultado.setSalidasEjecucion(new ArrayList<>());
+            return resultado;
         }
 
-        public AnalizadorSemantico.ResultadoSemantico getResultadoSemantico(){
-                return resultadoSemantico;
-        }
+        // PASO 5: Compilacion exitosa -> Activar JVM-J
+        resultado.setExitoCompilacion(true);
 
-        public List<Documentador.FilaDoc> getTablaDoc(){
-                return tablaDoc;
-        }
-
-        public List<String> getSalidaEjecucion(){
-                return salidaEjecucion;
-        }
-
-        public boolean isExitoso(){
-                return exitoso;
-        }
-    }
-
-    //  Componentes
-    private final AnalizadorLexico analizadorLexico = new AnalizadorLexico();
-    private final AnalizadorSintactico analizadorSintact = new AnalizadorSintactico();
-    private final AnalizadorSemantico analizadorSemant = new AnalizadorSemantico();
-    private final Documentador documentador = new Documentador();
-    private final EjecutorJoda ejecutor = new EjecutorJoda();
-
-
-    public ResultadoCompilacion compilar(String codigoFuente) {
-
-        // -- FASE 1a: Analisis Lexico --
-        List<Token> tokens = analizadorLexico.analizar(codigoFuente);
-
-        // Verificar errores lexicos
-        boolean hayErrorLexico = tokens.stream()
-                .anyMatch(t -> t.getTipo() == Token.Tipo.ERROR);
-
-        // -- Documentador: tabla de tokens --
-        List<Documentador.FilaDoc> tablaDoc = documentador.documentar(tokens);
-
-        // -- FASE 1b: Analisis Sintactico --
-        List<AnalizadorSintactico.ErrorSintactico> erroresSintact =
-                analizadorSintact.analizar(tokens);
-
-        // -- FASE 1c: Analisis Semantico --
-        AnalizadorSemantico.ResultadoSemantico resultSemant =
-                analizadorSemantico.analizar(tokens);
-
-        boolean hayErrores = hayErrorLexico
-                || !erroresSintact.isEmpty()
-                || resultSemant.tieneErrores();
-
-        // -- FASE 2: Ejecucion (solo si no hay errores) --
-        List<String> salidaEjecucion = new java.util.ArrayList<>();
-        if (!hayErrores) {
-                salidaEjecucion = ejecutor.ejecutar(tokens);
-        }
-
-        return new ResultadoCompilacion(
-                tokens,
-                erroresSintact,
-                resultSemant,
-                tablaDoc,
-                salidaEjecucion,
-                !hayErrores
+        List<String> salidasEjecucion = new ArrayList<>();
+        EjecutorJoda ejecutor = new EjecutorJoda(
+            analizadorSemantico.getTablaSimbolos(), salidasEjecucion
         );
+
+        try {
+            ejecutor.ejecutar(arbol);
+            resultado.setExitoEjecucion(true);
+        } catch (Exception e) {
+            salidasEjecucion.add("[ERROR JVM-J] Excepcion en ejecucion: " + e.getMessage());
+            resultado.setExitoEjecucion(false);
+        }
+
+        resultado.setSalidasEjecucion(salidasEjecucion);
+        return resultado;
     }
 
-    //  Acceso directo al semantico (para compatibilidad)
-    private AnalizadorSemantico analizadorSemantico = new AnalizadorSemantico();
+    // Metodos auxiliares
+    //Lee el contenido de un archivo de texto y lo retorna como String.
+    private String leerArchivo(String ruta) {
+        try {
+            byte[] bytes = Files.readAllBytes(Paths.get(ruta));
+            return new String(bytes, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /*
+    Elimina caracteres no imprimibles y normaliza saltos de linea.
+    Previene errores de visualizacion en la terminal.
+    */
+    private String limpiarCodigo(String codigo) {
+        // Normalizar saltos de linea a '\n'
+        codigo = codigo.replace("\r\n", "\n").replace("\r", "\n");
+        // Eliminar caracteres nulos y no imprimibles (excepto tabulacion y nueva linea)
+        StringBuilder sb = new StringBuilder();
+        for (char c : codigo.toCharArray()) {
+            if (c == '\n' || c == '\t' || (c >= 32 && c < 127)) {
+                sb.append(c);
+            }
+            // Los caracteres ASCII extendidos (acentos, etc.) se ignoran para evitar problemas de codificacion en la terminal
+        }
+        return sb.toString();
+    }
 }

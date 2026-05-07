@@ -1,4 +1,4 @@
-entry {
+entr {
 
 define int edad = 18;
 if (edad >= 18) {
