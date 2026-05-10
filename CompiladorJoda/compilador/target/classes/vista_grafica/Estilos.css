@@ -1,0 +1,589 @@
+/* =====================================================
+   COMPILADOR JODA - Hoja de Estilos JavaFX
+   Tema: IDE Oscuro Profesional
+   ===================================================== */
+
+/* ---- VARIABLES Y BASE ---- */
+.root {
+    -joda-bg-deep:      #0d1117;
+    -joda-bg-main:      #161b22;
+    -joda-bg-panel:     #1c2128;
+    -joda-bg-card:      #21262d;
+    -joda-bg-hover:     #30363d;
+    -joda-border:       #30363d;
+    -joda-border-light: #484f58;
+    -joda-accent:       #58a6ff;
+    -joda-accent-dark:  #1f6feb;
+    -joda-green:        #3fb950;
+    -joda-red:          #f85149;
+    -joda-yellow:       #d29922;
+    -joda-orange:       #db6d28;
+    -joda-purple:       #bc8cff;
+    -joda-text-primary: #e6edf3;
+    -joda-text-second:  #8b949e;
+    -joda-text-dim:     #484f58;
+    -fx-font-family:    "Consolas", "Courier New", monospace;
+    -fx-font-size:      13px;
+    -fx-background-color: #0d1117;
+}
+
+/* ---- BORDE RAIZ ---- */
+.root-pane {
+    -fx-background-color: #0d1117;
+    -fx-border-color: transparent;
+}
+
+/* ---- BARRA DE TITULO ---- */
+.title-bar {
+    -fx-background-color: #010409;
+    -fx-padding: 8 16 8 16;
+    -fx-border-color: transparent transparent #21262d transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.title-brand {
+    -fx-text-fill: #58a6ff;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Consolas", monospace;
+    -fx-letter-spacing: 4px;
+}
+
+.title-sub {
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 13px;
+    -fx-font-family: "Consolas", monospace;
+}
+
+.status-label {
+    -fx-text-fill: #3fb950;
+    -fx-font-size: 11px;
+    -fx-background-color: #0d2219;
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 12;
+    -fx-border-color: #3fb950;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+}
+
+/* ---- BARRA DE HERRAMIENTAS ---- */
+.toolbar-main {
+    -fx-background-color: #161b22;
+    -fx-padding: 4 12 4 12;
+    -fx-border-color: transparent transparent #30363d transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-spacing: 4;
+}
+
+.btn-toolbar {
+    -fx-background-color: #21262d;
+    -fx-text-fill: #c9d1d9;
+    -fx-border-color: #30363d;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 12 5 12;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.btn-toolbar:hover {
+    -fx-background-color: #30363d;
+    -fx-border-color: #58a6ff;
+    -fx-text-fill: #e6edf3;
+}
+
+.btn-toolbar:pressed {
+    -fx-background-color: #388bfd;
+    -fx-text-fill: #ffffff;
+}
+
+.btn-run {
+    -fx-background-color: #1a7f37;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #2ea043;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 16 5 16;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-run:hover {
+    -fx-background-color: #2ea043;
+    -fx-border-color: #3fb950;
+}
+
+.btn-run:pressed {
+    -fx-background-color: #0d2219;
+}
+
+.label-archivo {
+    -fx-text-fill: #484f58;
+    -fx-font-size: 11px;
+    -fx-padding: 0 8 0 0;
+}
+
+/* ---- SEPARADORES EN TOOLBAR ---- */
+.tool-bar > .separator {
+    -fx-background-color: #30363d;
+    -fx-pref-width: 1;
+    -fx-pref-height: 20;
+}
+
+/* ---- PANEL CABECERAS ---- */
+.panel-header {
+    -fx-background-color: #161b22;
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 11px;
+    -fx-font-family: "Consolas", monospace;
+    -fx-padding: 6 12 6 12;
+    -fx-border-color: transparent transparent #30363d transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-max-width: 99999;
+    -fx-pref-width: 9999;
+    -fx-text-transform: uppercase;
+}
+
+/* ---- DIVISORES ---- */
+.split-main {
+    -fx-background-color: #0d1117;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+}
+
+.split-main > .split-pane-divider {
+    -fx-background-color: #30363d;
+    -fx-pref-width: 1;
+}
+
+.split-bottom {
+    -fx-background-color: #0d1117;
+    -fx-padding: 0;
+}
+
+.split-bottom > .split-pane-divider {
+    -fx-background-color: #30363d;
+    -fx-pref-height: 1;
+}
+
+/* ---- PANEL EDITOR ---- */
+.panel-editor {
+    -fx-background-color: #0d1117;
+    -fx-pref-width: 9999;
+}
+
+.editor-container {
+    -fx-background-color: #0d1117;
+    -fx-vgrow: always;
+}
+
+/* Numeracion de lineas */
+.line-numbers {
+    -fx-background-color: #161b22;
+    -fx-control-inner-background: #161b22;
+    -fx-text-fill: #484f58;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-padding: 6 8 6 4;
+    -fx-border-color: transparent #30363d transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-highlight-fill: transparent;
+    -fx-highlight-text-fill: #484f58;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-text-alignment: right;
+    -fx-pref-width: 52;
+}
+
+.line-numbers:focused {
+    -fx-border-color: transparent #30363d transparent transparent;
+}
+
+/* Editor principal */
+.code-editor {
+    -fx-background-color: #0d1117;
+    -fx-control-inner-background: #0d1117;
+    -fx-text-fill: #e6edf3;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13.5px;
+    -fx-padding: 6 12 6 12;
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-highlight-fill: #264f78;
+    -fx-highlight-text-fill: #e6edf3;
+    -fx-pref-height: 99999;
+}
+
+.code-editor:focused {
+    -fx-border-color: transparent;
+    -fx-background-color: #0d1117;
+}
+
+/* Editor en estado de error: borde rojo sutil a la izquierda */
+.code-editor-error {
+    -fx-background-color: #0d1117;
+    -fx-control-inner-background: #0d1117;
+    -fx-border-color: #f85149 transparent transparent transparent;
+    -fx-border-width: 2 0 0 0;
+    -fx-highlight-fill: #5c1b1b;
+    -fx-highlight-text-fill: #ffa198;
+}
+
+/* ---- PANEL LATERAL (TABLA DE SIMBOLOS) ---- */
+.panel-lateral {
+    -fx-background-color: #161b22;
+    -fx-pref-width: 260;
+    -fx-min-width: 200;
+}
+
+.tabla-simbolos {
+    -fx-background-color: #161b22;
+    -fx-control-inner-background: #161b22;
+    -fx-table-cell-border-color: #21262d;
+    -fx-border-color: transparent;
+    -fx-pref-height: 99999;
+}
+
+.tabla-simbolos .column-header-background {
+    -fx-background-color: #0d1117;
+    -fx-border-color: transparent transparent #30363d transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tabla-simbolos .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent #30363d transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.tabla-simbolos .column-header .label {
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 11px;
+    -fx-font-family: "Consolas", monospace;
+    -fx-font-weight: bold;
+}
+
+.tabla-simbolos .table-row-cell {
+    -fx-background-color: #161b22;
+    -fx-border-color: transparent transparent #21262d transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tabla-simbolos .table-row-cell:odd {
+    -fx-background-color: #1c2128;
+}
+
+.tabla-simbolos .table-row-cell:selected {
+    -fx-background-color: #1f3358;
+}
+
+.tabla-simbolos .table-cell {
+    -fx-text-fill: #c9d1d9;
+    -fx-font-size: 11.5px;
+    -fx-font-family: "Consolas", monospace;
+    -fx-padding: 4 6 4 6;
+}
+
+.tabla-simbolos .table-row-cell:selected .table-cell {
+    -fx-text-fill: #58a6ff;
+}
+
+.placeholder-label {
+    -fx-text-fill: #484f58;
+    -fx-font-size: 11px;
+}
+
+/* ---- PESTANAS INFERIORES ---- */
+.tab-pane-results {
+    -fx-background-color: #161b22;
+    -fx-border-color: #30363d transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-pref-height: 280;
+    -fx-min-height: 150;
+}
+
+.tab-pane-results > .tab-header-area {
+    -fx-background-color: #0d1117;
+    -fx-padding: 0;
+}
+
+.tab-pane-results > .tab-header-area > .tab-header-background {
+    -fx-background-color: #0d1117;
+    -fx-border-color: transparent transparent #30363d transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tab-pane-results .tab {
+    -fx-background-color: transparent;
+    -fx-padding: 6 14 6 14;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.tab-pane-results .tab .tab-label {
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 12px;
+    -fx-font-family: "Consolas", monospace;
+}
+
+.tab-pane-results .tab:selected {
+    -fx-background-color: #161b22;
+    -fx-border-color: #58a6ff transparent transparent transparent;
+    -fx-border-width: 2 0 0 0;
+}
+
+.tab-pane-results .tab:selected .tab-label {
+    -fx-text-fill: #58a6ff;
+    -fx-font-weight: bold;
+}
+
+.tab-pane-results .tab:hover .tab-label {
+    -fx-text-fill: #e6edf3;
+}
+
+.tab-pane-results > .tab-content-area {
+    -fx-background-color: #161b22;
+    -fx-padding: 0;
+}
+
+/* ---- AREAS DE TEXTO DE SALIDA ---- */
+.output-area {
+    -fx-background-color: #161b22;
+    -fx-control-inner-background: #161b22;
+    -fx-text-fill: #c9d1d9;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12.5px;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-pref-height: 99999;
+}
+
+.output-area:focused {
+    -fx-border-color: transparent;
+}
+
+/* Area de errores: texto en rojo suave */
+.error-area {
+    -fx-background-color: #161b22;
+    -fx-control-inner-background: #161b22;
+    -fx-text-fill: #ffa198;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12.5px;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-pref-height: 99999;
+}
+
+.error-area:focused {
+    -fx-border-color: transparent;
+}
+
+/* ---- SCROLL BARS ---- */
+.scroll-bar {
+    -fx-background-color: #161b22;
+    -fx-padding: 0;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #30363d;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #484f58;
+}
+
+.scroll-bar .track {
+    -fx-background-color: #161b22;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+}
+
+/* ---- TOOLTIPS ---- */
+.tooltip {
+    -fx-background-color: #21262d;
+    -fx-text-fill: #e6edf3;
+    -fx-border-color: #30363d;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-size: 12px;
+}
+
+/* ---- DIALOGS / ALERTS ---- */
+.dialog-pane {
+    -fx-background-color: #161b22;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #21262d;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: #e6edf3;
+}
+
+.dialog-pane .content.label {
+    -fx-text-fill: #c9d1d9;
+}
+
+.dialog-pane .button-bar .button {
+    -fx-background-color: #21262d;
+    -fx-text-fill: #c9d1d9;
+    -fx-border-color: #30363d;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.dialog-pane .button-bar .button:hover {
+    -fx-background-color: #30363d;
+    -fx-border-color: #58a6ff;
+}
+
+/* ---- CONTENEDOR VBox ARRIBA ---- */
+.top-container {
+    -fx-background-color: #010409;
+}
+
+/* =====================================================
+   ESTILOS ADICIONALES v2.0
+   Barra de titulo personalizada + paneles colapsables
+   ===================================================== */
+
+/* ---- BOTONES DE CONTROL DE VENTANA (WM) ---- */
+
+.wm-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 13px;
+    -fx-min-width: 38px;
+    -fx-min-height: 32px;
+    -fx-pref-width: 38px;
+    -fx-pref-height: 32px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-alignment: CENTER;
+}
+
+/* Minimizar: hover gris */
+.wm-min:hover {
+    -fx-background-color: #30363d;
+    -fx-text-fill: #e6edf3;
+}
+
+.wm-min:pressed {
+    -fx-background-color: #21262d;
+}
+
+/* Maximizar: hover azul */
+.wm-max:hover {
+    -fx-background-color: #264f78;
+    -fx-text-fill: #58a6ff;
+}
+
+.wm-max:pressed {
+    -fx-background-color: #1f3358;
+}
+
+/* Cerrar: hover rojo */
+.wm-close:hover {
+    -fx-background-color: #c0392b;
+    -fx-text-fill: #ffffff;
+}
+
+.wm-close:pressed {
+    -fx-background-color: #922b21;
+}
+
+/* ---- CONTENEDOR INFERIOR COLAPSABLE ---- */
+
+.contenedor-inferior {
+    -fx-background-color: #161b22;
+    -fx-border-color: #30363d transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 30;
+}
+
+/* ---- CABECERA DE PANEL COLAPSABLE ---- */
+
+.panel-header-colapsable {
+    -fx-background-color: #0d1117;
+    -fx-padding: 5 10 5 12;
+    -fx-min-height: 30;
+    -fx-max-height: 30;
+    -fx-border-color: transparent transparent #21262d transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.panel-header-label {
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 11px;
+    -fx-font-family: "Consolas", monospace;
+}
+
+/* ---- BOTON DE COLAPSO INLINE (en la cabecera del panel) ---- */
+
+.btn-colapsar-inline {
+    -fx-background-color: transparent;
+    -fx-border-color: #30363d;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-border-width: 1;
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 12px;
+    -fx-min-width: 24px;
+    -fx-min-height: 20px;
+    -fx-pref-width: 24px;
+    -fx-pref-height: 20px;
+    -fx-padding: 0 4 0 4;
+    -fx-cursor: hand;
+}
+
+.btn-colapsar-inline:hover {
+    -fx-background-color: #21262d;
+    -fx-border-color: #58a6ff;
+    -fx-text-fill: #58a6ff;
+}
+
+/* ---- BOTONES DE TOGGLE EN LA TOOLBAR ---- */
+
+.btn-toggle {
+    -fx-background-color: #161b22;
+    -fx-border-color: #388bfd;
+    -fx-text-fill: #58a6ff;
+}
+
+.btn-toggle:hover {
+    -fx-background-color: #1f3358;
+    -fx-border-color: #58a6ff;
+}
+
+.btn-toggle:pressed {
+    -fx-background-color: #264f78;
+}
+
+/* ---- BORDE DE RESIZE (cursor activo en los bordes) ---- */
+
+/* El resize se maneja desde Java; este estilo es solo visual
+   para reforzar que la ventana tiene bordes redimensionables */
+.root-pane {
+    -fx-border-color: #30363d;
+    -fx-border-width: 1;
+}
