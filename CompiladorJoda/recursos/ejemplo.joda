@@ -1,0 +1,12 @@
+entry {
+
+define int edad = 18;
+if (edad >= 18) {
+    out("Eres mayor de edad");
+} else {
+    out("Eres menor de edad");
+}
+
+//Bloque inicial
+out("Holaaaaaaaaaaaaaaaaaaaaaaaaa");
+}
