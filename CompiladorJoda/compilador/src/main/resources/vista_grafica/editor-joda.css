@@ -1,0 +1,138 @@
+/*
+ * editor-joda.css
+ * Estilos de resaltado de sintaxis para el CodeArea de RichTextFX.
+ * Ruta: src/main/resources/vista_grafica/editor-joda.css
+ *
+ * Clases asignadas por Controlador.calcularEstilos():
+ *   .keyword   -> palabras de control: if, else, loop, select, case, entry, return, new
+ *   .type      -> tipos de dato: int, dec, string, bool, void
+ *   .builtin   -> instrucciones: define, out, input, object, method
+ *   .string    -> literales cadena "..."
+ *   .number    -> literales numericos
+ *   .boolean   -> true / false
+ *   .comment   -> comentarios //
+ *   .operator  -> operadores + - * / = == != > < ...
+ *   .bracket   -> { } ( ) [ ]
+ */
+
+/* ---- BASE ---- */
+.code-area {
+    -fx-background-color: #0d1117;
+}
+.code-area .content {
+    -fx-background-color: #0d1117;
+}
+.code-area .text {
+    -fx-fill: #e6edf3;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13.5px;
+}
+/* Cursor REAL de RichTextFX */
+.styled-text-area .caret {
+    -fx-stroke: #00ff88;
+    -fx-stroke-width: 2px;
+}
+.code-area .selection {
+    -fx-fill: #264f78;
+}
+
+/* ---- NUMEROS DE LINEA (LineNumberFactory) ---- */
+.lineno {
+    -fx-background-color: #161b22;
+    -fx-text-fill: #484f58;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-padding: 0 10 0 6;
+    -fx-border-color: transparent #30363d transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-alignment: CENTER_RIGHT;
+    -fx-min-width: 52;
+    -fx-pref-width: 52;
+}
+
+/* ============================================================
+   COLORES DE SINTAXIS
+   ============================================================ */
+
+/* Palabras de control de flujo y estructura */
+.keyword {
+    -fx-fill: #ff7b72;       /* rojo suave - GitHub Dark style */
+    -fx-font-weight: bold;
+}
+
+/* Tipos de dato */
+.type {
+    -fx-fill: #79c0ff;       /* azul claro */
+    -fx-font-weight: bold;
+}
+
+/* Instrucciones built-in (define, out, input, object, method) */
+.builtin {
+    -fx-fill: #d2a8ff;       /* morado claro */
+    -fx-font-weight: bold;
+}
+
+/* Cadenas de texto */
+.string {
+    -fx-fill: #a5d6ff;       /* cian claro */
+}
+
+/* Numeros */
+.number {
+    -fx-fill: #79c0ff;       /* azul claro */
+}
+
+/* Booleanos */
+.boolean {
+    -fx-fill: #ff9a3c;       /* naranja */
+    -fx-font-weight: bold;
+}
+
+/* Comentarios */
+.comment {
+    -fx-fill: #6e7681;       /* gris oscuro */
+    -fx-font-style: italic;
+}
+
+/* Operadores */
+.operator {
+    -fx-fill: #ffa657;       /* naranja dorado */
+}
+
+/* Delimitadores */
+.bracket {
+    -fx-fill: #e6edf3;
+    -fx-font-weight: bold;
+}
+
+/* ============================================================
+   POPUP DE AUTOCOMPLETADO
+   ============================================================ */
+.autocomplete-popup {
+    -fx-background-color: #1c2128;
+    -fx-border-color: #388bfd;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 12, 0, 0, 4);
+}
+.autocomplete-popup .list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 2;
+}
+.autocomplete-popup .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c9d1d9;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-padding: 3 12 3 12;
+}
+.autocomplete-popup .list-cell:hover {
+    -fx-background-color: #264f78;
+    -fx-text-fill: #e6edf3;
+}
+.autocomplete-popup .list-cell:selected {
+    -fx-background-color: #388bfd;
+    -fx-text-fill: #ffffff;
+}
