@@ -32,6 +32,7 @@ public class ResultadoCompilacion {
 
     //Documentacion
     private String documentacion;
+    private String rutaPdfDocDescriptiva;
 
     //Ejecucion JVM-J
     private List<String> salidasEjecucion;
@@ -70,6 +71,9 @@ public class ResultadoCompilacion {
 
     public String getDocumentacion() { return documentacion; }
     public void setDocumentacion(String documentacion) { this.documentacion = documentacion; }
+
+    public String getRutaPdfDocDescriptiva() { return rutaPdfDocDescriptiva; }
+    public void setRutaPdfDocDescriptiva(String rutaPdfDocDescriptiva) { this.rutaPdfDocDescriptiva = rutaPdfDocDescriptiva; }
 
     public List<String> getSalidasEjecucion() { return salidasEjecucion; }
     public void setSalidasEjecucion(List<String> salidasEjecucion) { this.salidasEjecucion = salidasEjecucion; }

@@ -36,6 +36,7 @@ logica\semantico\EntradaTablaSimbolos$CategoriaEntrada.class
 logica\sintactico\NodoAST$NodoIf.class
 logica\documentador\Documentador.class
 vista_grafica\Controlador.class
+logica\documentador\GeneradorPdf_Docdes.class
 logica\sintactico\NodoAST$NodoIncrementoPostfijo.class
 logica\sintactico\NodoAST.class
 logica\sintactico\AnalizadorSintactico$1.class

@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
 import java.awt.Color;
 import java.io.File;
@@ -14,18 +15,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * GeneradorPdf_Docdes
- *
- * Genera un PDF con la documentacion descriptiva linea por linea
- * producida por DocumentadorLinea.
- *
- * Solo debe invocarse cuando la compilacion es exitosa (sin errores).
- *
- * Uso:
- *   GeneradorPdf_Docdes gen = new GeneradorPdf_Docdes();
- *   String ruta = gen.generar(lineasDocumentacion, nombreArchivo);
- */
+/*
+GeneradorPdf_Docdes
+
+Genera un PDF con la documentacion descriptiva linea por linea
+producida por DocumentadorLinea.
+
+Solo debe invocarse cuando la compilacion es exitosa (sin errores).
+Uso:
+    GeneradorPdf_Docdes gen = new GeneradorPdf_Docdes();
+    String ruta = gen.generar(lineasDocumentacion, nombreArchivo);
+*/
 public class GeneradorPdf_Docdes {
 
     // ---- Constantes de diseno ----
@@ -49,23 +49,15 @@ public class GeneradorPdf_Docdes {
     private static final Color COLOR_CUERPO_FILA_PAR  = new Color(22, 27, 34);   // #161b22
     private static final Color COLOR_CUERPO_FILA_IMPAR= new Color(28, 33, 40);   // #1c2128
 
-    /**
-     * Genera el PDF de documentacion descriptiva.
-     *
-     * @param lineasDoc    Lista de strings producida por DocumentadorLinea.documentarPorLinea()
-     * @param archivoJoda  Nombre o ruta del archivo fuente .joda (para la portada)
-     * @return             Ruta absoluta del PDF generado
-     * @throws IOException Si no se puede escribir el archivo
-     */
+    //Genera el PDF de documentacion descriptiva.
+
     public String generar(List<String> lineasDoc, String archivoJoda) throws IOException {
 
         // Determinar ruta de salida junto al archivo fuente (o en directorio temporal)
         String nombreBase = extraerNombreBase(archivoJoda);
-        String timestamp  = LocalDateTime.now()
-                               .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String rutaSalida = System.getProperty("java.io.tmpdir")
+        String rutaSalida = System.getProperty("user.dir")
                             + File.separator
-                            + "DocDescriptiva_" + nombreBase + "_" + timestamp + ".pdf";
+                            + "DocDescriptiva_" + nombreBase + ".pdf";
 
         try (PDDocument documento = new PDDocument()) {
 
@@ -81,9 +73,7 @@ public class GeneradorPdf_Docdes {
         return rutaSalida;
     }
 
-    // -----------------------------------------------------------------------
     // PORTADA
-    // -----------------------------------------------------------------------
     private void agregarPortada(PDDocument doc, String nombreBase, String rutaOriginal)
             throws IOException {
 
@@ -111,13 +101,13 @@ public class GeneradorPdf_Docdes {
 
             // ---- Titulo principal ----
             float yTitulo = alto - 120;
-            dibujarTexto(cs, "COMPILADOR JODA", PDType1Font.HELVETICA_BOLD,
-                         22f, COLOR_ACENTO, centrarX("COMPILADOR JODA", PDType1Font.HELVETICA_BOLD, 22f, ancho), yTitulo);
+            dibujarTexto(cs, "COMPILADOR JODA", new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD),
+                         22f, COLOR_ACENTO, centrarX("COMPILADOR JODA", new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 22f, ancho), yTitulo);
 
             yTitulo -= 28;
-            dibujarTexto(cs, "Documentacion Descriptiva", PDType1Font.HELVETICA_BOLD,
+            dibujarTexto(cs, "Documentacion Descriptiva", new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD),
                          16f, COLOR_TEXTO_CLARO,
-                         centrarX("Documentacion Descriptiva", PDType1Font.HELVETICA_BOLD, 16f, ancho), yTitulo);
+                         centrarX("Documentacion Descriptiva", new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 16f, ancho), yTitulo);
 
             // Linea separadora central
             yTitulo -= 20;
@@ -130,41 +120,39 @@ public class GeneradorPdf_Docdes {
             // ---- Datos del archivo ----
             yTitulo -= 40;
             String labelArchivo = "Archivo fuente:";
-            dibujarTexto(cs, labelArchivo, PDType1Font.HELVETICA_BOLD,
+            dibujarTexto(cs, labelArchivo, new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD),
                          11f, COLOR_TEXTO_TENUE,
-                         centrarX(labelArchivo, PDType1Font.HELVETICA_BOLD, 11f, ancho), yTitulo);
+                         centrarX(labelArchivo, new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 11f, ancho), yTitulo);
 
             yTitulo -= 18;
-            dibujarTexto(cs, nombreBase + ".joda", PDType1Font.HELVETICA_BOLD,
+            dibujarTexto(cs, nombreBase + ".joda", new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD),
                          13f, COLOR_VERDE,
-                         centrarX(nombreBase + ".joda", PDType1Font.HELVETICA_BOLD, 13f, ancho), yTitulo);
+                         centrarX(nombreBase + ".joda", new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 13f, ancho), yTitulo);
 
             // ---- Fecha y hora ----
             yTitulo -= 50;
             String fechaHora = "Generado: " +
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy  HH:mm:ss"));
-            dibujarTexto(cs, fechaHora, PDType1Font.HELVETICA,
+            dibujarTexto(cs, fechaHora, new PDType1Font(Standard14Fonts.FontName.HELVETICA),
                          10f, COLOR_TEXTO_TENUE,
-                         centrarX(fechaHora, PDType1Font.HELVETICA, 10f, ancho), yTitulo);
+                         centrarX(fechaHora, new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10f, ancho), yTitulo);
 
             // ---- Estado ----
             yTitulo -= 25;
             String estadoTxt = "Estado: COMPILACION EXITOSA";
-            dibujarTexto(cs, estadoTxt, PDType1Font.HELVETICA_BOLD,
+            dibujarTexto(cs, estadoTxt, new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD),
                          11f, COLOR_VERDE,
-                         centrarX(estadoTxt, PDType1Font.HELVETICA_BOLD, 11f, ancho), yTitulo);
+                         centrarX(estadoTxt, new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 11f, ancho), yTitulo);
 
             // ---- Pie de portada ----
             dibujarTexto(cs, "JVM-J  |  Joint Object-Deployment Assembly",
-                         PDType1Font.HELVETICA, 8f, COLOR_TEXTO_TENUE,
+                         new PDType1Font(Standard14Fonts.FontName.HELVETICA), 8f, COLOR_TEXTO_TENUE,
                          centrarX("JVM-J  |  Joint Object-Deployment Assembly",
-                                  PDType1Font.HELVETICA, 8f, ancho), 25f);
+                                  new PDType1Font(Standard14Fonts.FontName.HELVETICA), 8f, ancho), 25f);
         }
     }
 
-    // -----------------------------------------------------------------------
     // PAGINAS DE CONTENIDO
-    // -----------------------------------------------------------------------
     private void agregarPaginasContenido(PDDocument doc,
                                           List<String> lineasDoc,
                                           String nombreBase) throws IOException {
@@ -229,7 +217,7 @@ public class GeneradorPdf_Docdes {
 
             if (esLinea) {
                 colorTexto = COLOR_ACENTO;
-                fuente     = PDType1Font.HELVETICA_BOLD;
+                fuente     = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
                 tamFuente  = TAM_SUBTITULO;
                 // Separador sutil antes de cada bloque de linea
                 if (filaIdx > 0) {
@@ -241,7 +229,7 @@ public class GeneradorPdf_Docdes {
                 }
             } else {
                 colorTexto = COLOR_TEXTO_CLARO;
-                fuente     = PDType1Font.HELVETICA;
+                fuente     = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
                 tamFuente  = TAM_CUERPO;
             }
 
@@ -260,13 +248,8 @@ public class GeneradorPdf_Docdes {
         }
     }
 
-    // -----------------------------------------------------------------------
     // CABECERA Y PIE DE PAGINA DE CONTENIDO
-    // -----------------------------------------------------------------------
-
-    /**
-     * Dibuja la cabecera de una pagina de contenido y retorna la Y de inicio del cuerpo.
-     */
+    //Dibuja la cabecera de una pagina de contenido y retorna la Y de inicio del cuerpo.
     private float iniciarPagina(PDPageContentStream cs,
                                   float ancho, float alto,
                                   int numeroPagina, String nombreBase) throws IOException {
@@ -287,21 +270,19 @@ public class GeneradorPdf_Docdes {
 
         // Titulo en cabecera
         dibujarTexto(cs, "JODA  |  Doc. Descriptiva  |  " + nombreBase + ".joda",
-                     PDType1Font.HELVETICA_BOLD, TAM_CABECERA, COLOR_ACENTO,
+                     new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), TAM_CABECERA, COLOR_ACENTO,
                      MARGEN_IZQ, alto - 24);
 
         // Numero de pagina (derecha)
         String pag = "Pagina " + numeroPagina;
-        float xPag = ancho - MARGEN_DER - anchoTexto(pag, PDType1Font.HELVETICA, TAM_CABECERA);
-        dibujarTexto(cs, pag, PDType1Font.HELVETICA, TAM_CABECERA, COLOR_TEXTO_TENUE, xPag, alto - 24);
+        float xPag = ancho - MARGEN_DER - anchoTexto(pag, new PDType1Font(Standard14Fonts.FontName.HELVETICA), TAM_CABECERA);
+        dibujarTexto(cs, pag, new PDType1Font(Standard14Fonts.FontName.HELVETICA), TAM_CABECERA, COLOR_TEXTO_TENUE, xPag, alto - 24);
 
         // Devolver Y donde empieza el cuerpo
         return alto - MARGEN_SUP;
     }
 
-    /**
-     * Dibuja el pie de pagina y cierra el ContentStream.
-     */
+    //Dibuja el pie de pagina y cierra el ContentStream.
     private void cerrarPagina(PDPageContentStream cs,
                                PDDocument doc, PDPage pagina,
                                int numeroPagina, String nombreBase,
@@ -313,16 +294,13 @@ public class GeneradorPdf_Docdes {
 
         // Texto del pie
         String pie = "Compilador JODA v2.2  |  JVM-J: JODA Virtual Machine  |  Compilacion exitosa";
-        float xPie = centrarX(pie, PDType1Font.HELVETICA, TAM_CABECERA, ancho);
-        dibujarTexto(cs, pie, PDType1Font.HELVETICA, TAM_CABECERA, COLOR_TEXTO_TENUE, xPie, MARGEN_INF - 14);
+        float xPie = centrarX(pie, new PDType1Font(Standard14Fonts.FontName.HELVETICA), TAM_CABECERA, ancho);
+        dibujarTexto(cs, pie, new PDType1Font(Standard14Fonts.FontName.HELVETICA), TAM_CABECERA, COLOR_TEXTO_TENUE, xPie, MARGEN_INF - 14);
 
         cs.close();
     }
 
-    // -----------------------------------------------------------------------
     // UTILIDADES DE DIBUJO
-    // -----------------------------------------------------------------------
-
     private void dibujarTexto(PDPageContentStream cs, String texto,
                                PDType1Font fuente, float tamano,
                                Color color, float x, float y) throws IOException {
