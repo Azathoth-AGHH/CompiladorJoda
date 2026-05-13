@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    VistaPrincipal.fxml - Compilador JODA v2.3
+    Ventana sin decoraciones nativas.
+    Barra de titulo personalizada con: arrastrar, cerrar, minimizar, maximizar.
+    Panel lateral (tabla simbolos) colapsable.
+    Panel inferior (resultados) redimensionable con SplitPane vertical.
+    SplitPane vertical con fx:id para inyeccion directa en el controlador.
+-->
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="vista_grafica.Controlador"
+            styleClass="root-pane"
+            xmlns="http://javafx.com/javafx/17">
+
+    <!-- ===== BARRA DE TITULO PERSONALIZADA ===== -->
+    <top>
+        <VBox styleClass="top-container">
+
+            <!-- Barra de titulo: arrastrable, con controles de ventana -->
+            <HBox fx:id="barraTitulo"
+                  styleClass="title-bar"
+                  alignment="CENTER_LEFT"
+                  spacing="10"
+                  onMousePressed="#onTitleBarPressed"
+                  onMouseDragged="#onTitleBarDragged">
+
+                <!-- Icono + nombre -->
+                <Label text="JODA" styleClass="title-brand"/>
+                <Label text="Compilador" styleClass="title-sub"/>
+
+                <!-- Nombre del archivo actual -->
+                <Label fx:id="labelArchivo"
+                       text="Sin archivo"
+                       styleClass="label-archivo"/>
+
+                <!-- Espacio flexible -->
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- Indicador de estado -->
+                <Label fx:id="labelEstado"
+                       text="Listo"
+                       styleClass="status-label"/>
+
+                <!-- Separador visual -->
+                <Region prefWidth="12"/>
+
+                <!-- BOTONES DE VENTANA -->
+                <Button fx:id="btnMinimizar"
+                        text="—"
+                        styleClass="wm-btn,wm-min"
+                        onAction="#accionMinimizar"
+                        focusTraversable="false"/>
+
+                <Button fx:id="btnMaximizar"
+                        text="□"
+                        styleClass="wm-btn,wm-max"
+                        onAction="#accionMaximizar"
+                        focusTraversable="false"/>
+
+                <Button fx:id="btnCerrar"
+                        text="✕"
+                        styleClass="wm-btn,wm-close"
+                        onAction="#accionCerrar"
+                        focusTraversable="false"/>
+            </HBox>
+
+            <!-- Barra de herramientas -->
+            <ToolBar styleClass="toolbar-main">
+                <Button text="Nuevo"
+                        onAction="#accionNuevo"
+                        styleClass="btn-toolbar"/>
+                <Button text="Abrir"
+                        onAction="#accionAbrir"
+                        styleClass="btn-toolbar"/>
+                <Button text="Guardar"
+                        onAction="#accionGuardar"
+                        styleClass="btn-toolbar"/>
+                <Button text="Guardar Como"
+                        onAction="#accionGuardarComo"
+                        styleClass="btn-toolbar"/>
+                <Separator/>
+                <Button text="Compilar y Ejecutar"
+                        onAction="#accionCompilar"
+                        styleClass="btn-run"/>
+                <Separator/>
+                <Button text="Limpiar"
+                        onAction="#accionLimpiar"
+                        styleClass="btn-toolbar"/>
+                <Separator/>
+                <Button fx:id="btnToggleLateral"
+                        text="◀ Tabla"
+                        onAction="#togglePanelLateral"
+                        styleClass="btn-toolbar,btn-toggle"/>
+                <Button fx:id="btnToggleInferior"
+                        text="▾ Panel"
+                        onAction="#togglePanelInferior"
+                        styleClass="btn-toolbar,btn-toggle"/>
+            </ToolBar>
+
+        </VBox>
+    </top>
+
+    <!-- ===== AREA CENTRAL: SplitPane VERTICAL (editor+tabla | resultados) ===== -->
+    <center>
+        <SplitPane fx:id="splitVertical"
+                   orientation="VERTICAL"
+                   dividerPositions="0.65"
+                   styleClass="split-main">
+
+            <!-- MITAD SUPERIOR: SplitPane horizontal (editor | tabla simbolos) -->
+            <SplitPane fx:id="splitCentral"
+                       orientation="HORIZONTAL"
+                       dividerPositions="0.75"
+                       styleClass="split-main">
+
+                <!-- Editor de codigo -->
+                <VBox styleClass="panel-editor">
+                    <Label text="Editor de Codigo JODA"
+                           styleClass="panel-header"/>
+                    <HBox fx:id="editorHBox"
+                          VBox.vgrow="ALWAYS"
+                          styleClass="editor-container">
+                        <TextArea fx:id="areaNumeros"
+                                  styleClass="line-numbers"
+                                  editable="false"
+                                  focusTraversable="false"
+                                  prefWidth="52"
+                                  HBox.hgrow="NEVER"/>
+                        <TextArea fx:id="areaEditor"
+                                  styleClass="code-editor"
+                                  promptText="// Escribe tu codigo JODA aqui..."
+                                  HBox.hgrow="ALWAYS"
+                                  wrapText="false"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Panel lateral: Tabla de Simbolos (colapsable) -->
+                <VBox fx:id="panelLateral"
+                      styleClass="panel-lateral"
+                      minWidth="0">
+                    <HBox styleClass="panel-header-colapsable"
+                          alignment="CENTER_LEFT">
+                        <Label text="Tabla de Simbolos"
+                               styleClass="panel-header-label"
+                               HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <TableView fx:id="tablaSimbolos"
+                               VBox.vgrow="ALWAYS"
+                               styleClass="tabla-simbolos">
+                        <columns>
+                            <TableColumn fx:id="colNombre"
+                                         text="Nombre"
+                                         prefWidth="90"/>
+                            <TableColumn fx:id="colTipo"
+                                         text="Tipo"
+                                         prefWidth="60"/>
+                            <TableColumn fx:id="colCategoria"
+                                         text="Cat."
+                                         prefWidth="55"/>
+                            <TableColumn fx:id="colLinea"
+                                         text="Linea"
+                                         prefWidth="50"/>
+                            <TableColumn fx:id="colValor"
+                                         text="Valor"
+                                         prefWidth="80"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Sin simbolos"
+                                   styleClass="placeholder-label"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+
+            </SplitPane>
+
+            <!-- MITAD INFERIOR: Panel de resultados (redimensionable) -->
+            <VBox fx:id="contenedorInferior"
+                  styleClass="contenedor-inferior"
+                  minHeight="30">
+
+                <!-- Cabecera con boton de colapso -->
+                <HBox styleClass="panel-header-colapsable"
+                      alignment="CENTER_LEFT"
+                      spacing="8">
+                    <Label text="Resultados del Compilador"
+                           styleClass="panel-header-label"
+                           HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnColapsarInferior"
+                            text="▾"
+                            styleClass="btn-colapsar-inline"
+                            onAction="#togglePanelInferior"
+                            focusTraversable="false"/>
+                </HBox>
+
+                <!-- TabPane de resultados -->
+                <TabPane fx:id="tabPaneResultados"
+                         styleClass="tab-pane-results"
+                         tabClosingPolicy="UNAVAILABLE"
+                         VBox.vgrow="ALWAYS">
+
+                    <Tab text="Salida / Ejecucion" fx:id="tabSalida">
+                        <TextArea fx:id="areaSalida"
+                                  styleClass="output-area"
+                                  editable="false"
+                                  wrapText="true"
+                                  promptText="La salida de ejecucion aparecera aqui..."/>
+                    </Tab>
+
+                    <Tab text="Errores y Advertencias" fx:id="tabErrores">
+                        <TextArea fx:id="areaErrores"
+                                  styleClass="error-area"
+                                  editable="false"
+                                  wrapText="true"
+                                  promptText="Los errores detectados apareceran aqui..."/>
+                    </Tab>
+
+                    <Tab text="Tokens (Lexico)" fx:id="tabTokens">
+                        <TextArea fx:id="areaTokens"
+                                  styleClass="output-area"
+                                  editable="false"
+                                  wrapText="false"
+                                  promptText="La tabla de tokens aparecera aqui..."/>
+                    </Tab>
+
+                    <Tab text="Doc. Tecnica (Token a Token)" fx:id="tabDocTecnica">
+                        <TextArea fx:id="areaDocTecnica"
+                                  styleClass="output-area"
+                                  editable="false"
+                                  wrapText="false"
+                                  promptText="La documentacion tecnica aparecera aqui..."/>
+                    </Tab>
+
+                    <Tab text="Doc. Descriptiva (Linea x Linea)" fx:id="tabDocDescriptiva">
+                        <TextArea fx:id="areaDocDescriptiva"
+                                  styleClass="output-area"
+                                  editable="false"
+                                  wrapText="true"
+                                  promptText="La documentacion descriptiva aparecera aqui..."/>
+                    </Tab>
+
+                </TabPane>
+            </VBox>
+
+        </SplitPane>
+    </center>
+
+</BorderPane>
